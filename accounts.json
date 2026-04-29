@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Leo",
+    "passwordHash": "$argon2id$v=19$m=65536,t=2,p=1$dJTPAxld3rJ331X7638dAJl9s8R3jzSrp0RIw1NLAws$FlP6DmvFKcG7mhwgmf3THMyPWhJk0R6sryqaEKV0THA",
+    "emoji": "🐱",
+    "createdAt": 1777426223086
+  },
+  {
+    "name": "Coco",
+    "passwordHash": "$argon2id$v=19$m=65536,t=2,p=1$gBakwNx+AundXWBrUsm6YD0eCbVaX6Ul00C7x0iaUCg$btvbXUvg6PP7fQd7/3H6rX8WIs7o+s6naFGspEJeXIw",
+    "emoji": "🐱",
+    "createdAt": 1777426809518
+  }
+]
