@@ -224,6 +224,33 @@
     .conn-dot.offline{background:var(--offline);}
     .conn-dot.reconnecting{background:var(--warning);animation:pulse 1s infinite;}
 
+    /* ── Phone Call Overlay ──────────────────────────────── */
+    #call-overlay{display:none;position:fixed;inset:0;z-index:9500;background:linear-gradient(160deg,#111f11 0%,#0a150a 60%,#0d1a10 100%);flex-direction:column;align-items:center;justify-content:space-between;padding:max(env(safe-area-inset-top),44px) 24px max(env(safe-area-inset-bottom),36px);font-family:-apple-system,'SF Pro Display','Segoe UI',sans-serif;animation:callFadeIn .3s ease;}
+    #call-overlay.active{display:flex;}
+    @keyframes callFadeIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+    .call-top-bar{width:100%;display:flex;align-items:center;justify-content:space-between;color:rgba(255,255,255,.45);font-size:13px;font-weight:600;}
+    .call-top-bar .call-app-name{color:#23a55a;font-weight:700;letter-spacing:.3px;}
+    .call-center{display:flex;flex-direction:column;align-items:center;gap:28px;}
+    .call-ring-wrap{position:relative;width:136px;height:136px;}
+    .call-ring-pulse{position:absolute;inset:0;border-radius:50%;background:rgba(35,165,90,.12);animation:ringPulse 2.2s ease-in-out infinite;}
+    .call-ring-pulse2{position:absolute;inset:-14px;border-radius:50%;border:1.5px solid rgba(35,165,90,.2);animation:ringPulse 2.2s ease-in-out infinite .55s;}
+    .call-ring-pulse3{position:absolute;inset:-28px;border-radius:50%;border:1px solid rgba(35,165,90,.1);animation:ringPulse 2.2s ease-in-out infinite 1.1s;}
+    @keyframes ringPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.07);opacity:.5}}
+    .call-avatar-circle{position:absolute;inset:0;border-radius:50%;background:rgba(35,165,90,.18);border:2px solid rgba(35,165,90,.4);display:flex;align-items:center;justify-content:center;font-size:62px;line-height:1;}
+    .call-info{text-align:center;}
+    .call-channel-name{font-size:30px;font-weight:700;color:#fff;letter-spacing:-.5px;margin-bottom:5px;}
+    .call-label{font-size:14px;color:rgba(255,255,255,.5);margin-bottom:10px;letter-spacing:.3px;}
+    .call-timer{font-size:24px;font-weight:600;color:#23a55a;font-variant-numeric:tabular-nums;letter-spacing:2px;}
+    .call-controls{display:flex;gap:32px;align-items:center;justify-content:center;}
+    .call-ctrl{width:68px;height:68px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;transition:transform .12s,opacity .12s;-webkit-tap-highlight-color:transparent;outline:none;}
+    .call-ctrl:active{transform:scale(.9);opacity:.8;}
+    .call-ctrl-mute{background:rgba(255,255,255,.13);}
+    .call-ctrl-mute.is-muted{background:rgba(242,63,67,.25);box-shadow:0 0 0 2px rgba(242,63,67,.4);}
+    .call-ctrl-deafen{background:rgba(255,255,255,.13);}
+    .call-ctrl-deafen.is-deafened{background:rgba(242,63,67,.25);box-shadow:0 0 0 2px rgba(242,63,67,.4);}
+    .call-ctrl-end{background:#f23f43;width:76px;height:76px;font-size:28px;box-shadow:0 4px 20px rgba(242,63,67,.45);}
+    .call-bottom-hint{font-size:12px;color:rgba(255,255,255,.25);text-align:center;letter-spacing:.3px;}
+
     @media(max-width:900px){#screen-main{grid-template-columns:240px 1fr}#sidebar-right{display:none}}
     @media(max-width:600px){#screen-main{grid-template-columns:1fr}#sidebar-left{display:none}}
 
@@ -288,7 +315,39 @@
 <body>
 <div id="app">
 
-  <!-- BAN SCREEN -->
+  <!-- Phone Call Overlay (shows when in voice channel — keeps mic alive in background) -->
+  <div id="call-overlay">
+    <div class="call-top-bar">
+      <span class="call-app-name">⬡ NEXUS VOICE</span>
+      <span id="call-overlay-members">1 connected</span>
+    </div>
+    <div class="call-center">
+      <div class="call-ring-wrap">
+        <div class="call-ring-pulse3"></div>
+        <div class="call-ring-pulse2"></div>
+        <div class="call-ring-pulse"></div>
+        <div class="call-avatar-circle" id="call-overlay-avatar">🎙</div>
+      </div>
+      <div class="call-info">
+        <div class="call-channel-name" id="call-overlay-channel">Voice Channel</div>
+        <div class="call-label">Voice call in progress</div>
+        <div class="call-timer" id="call-overlay-timer">00:00</div>
+      </div>
+    </div>
+    <div>
+      <div class="call-controls">
+        <button class="call-ctrl call-ctrl-deafen" id="call-deafen-btn"
+          onclick="toggleDeafen();updateCallOverlay();" title="Deafen">🔊</button>
+        <button class="call-ctrl call-ctrl-end" id="call-end-btn"
+          onclick="leaveVoiceChannel();" title="End Call">📵</button>
+        <button class="call-ctrl call-ctrl-mute" id="call-mute-btn"
+          onclick="toggleMute();updateCallOverlay();" title="Mute/Unmute">🎙</button>
+      </div>
+      <div class="call-bottom-hint">🔴 Mic stays active · Switch apps freely</div>
+    </div>
+  </div>
+
+
   <div id="screen-banned" hidden style="
     position:fixed;inset:0;background:#0a0a0f;display:flex;align-items:center;
     justify-content:center;z-index:99999;padding:24px;
@@ -1055,6 +1114,14 @@ async function joinVoiceChannel(vcId){
   setMuted(true);
   postSystemMsg("general",`🔊 **${myName}** joined voice channel **${vc?.name||vcId}**`);
   notify(`Joined ${vc?.name||vcId} — hold M to speak`,"success");
+  // Start silent audio NOW so the phone OS sees an active audio session
+  // (this is what keeps the mic recording when you switch apps — same as a real call)
+  if(audioCtx?.state==="suspended") audioCtx.resume();
+  startSilentAudio();
+  startKeepAlive();
+  requestWakeLock();
+  updateMediaSession();
+  showCallOverlay(vc?.name||vcId);
   refreshVoiceView();buildSidebar();renderMembers();
 }
 
@@ -1065,6 +1132,8 @@ function leaveVoiceChannel(switchToText=true){
   for(const n of [...peers.keys()])destroyPeer(n);
   joinedVoiceChannel=null;myGroup="global";
   document.getElementById("vc-status-bar").hidden=true;
+  hideCallOverlay();
+  updateMediaSession();
   if(vc){postSystemMsg("general",`👋 **${myName}** left voice channel **${vc.name}**`);notify(`Left ${vc.name}`,"info");}
   if(switchToText)switchTextChannel(activeTextChannel);
   else{buildSidebar();renderMembers();}
@@ -1659,10 +1728,81 @@ function playTone(freq,duration,type="sine"){if(!audioCtx)return;const osc=audio
 /* ══ Mobile keep-alive ═══════════════════════════════════════════════════════ */
 let wakeLock=null,silentNode=null,keepAliveInterval=null;
 async function requestWakeLock(){try{if("wakeLock"in navigator){wakeLock=await navigator.wakeLock.request("screen");wakeLock.addEventListener("release",()=>setTimeout(requestWakeLock,500));}}catch{}}
-function startSilentAudio(){if(!audioCtx||silentNode)return;const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();gain.gain.value=0.001;osc.connect(gain);gain.connect(audioCtx.destination);osc.start();silentNode=osc;if("mediaSession"in navigator){navigator.mediaSession.metadata=new MediaMetadata({title:"Nexus",artist:"Voice call in progress",album:"Nexus"});navigator.mediaSession.playbackState="playing";["play","pause","stop"].forEach(a=>navigator.mediaSession.setActionHandler(a,()=>{}));}}
+function startSilentAudio(){
+  if(!audioCtx||silentNode)return;
+  const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+  gain.gain.value=0.001;
+  osc.connect(gain);gain.connect(audioCtx.destination);osc.start();silentNode=osc;
+  updateMediaSession();
+}
+
+function updateMediaSession(){
+  if(!("mediaSession" in navigator)) return;
+  const inVC = !!joinedVoiceChannel;
+  const vcName = inVC ? (getAllVoiceChannels().find(v=>v.id===joinedVoiceChannel)?.name || "Voice") : "Nexus";
+
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title:  inVC ? `📞 ${vcName}` : "Nexus",
+    artist: inVC ? `Voice call in progress — ${myName}` : "Your space to talk, chat, and hang out",
+    album:  "Nexus",
+  });
+  navigator.mediaSession.playbackState = "playing";
+
+  // Override play/pause/stop so phone controls don't kill audio
+  ["play","pause","stop"].forEach(a => {
+    try { navigator.mediaSession.setActionHandler(a, () => {
+      // Resume audio context if suspended but never stop it
+      if(audioCtx?.state === "suspended") audioCtx.resume();
+    }); } catch {}
+  });
+
+  // Show "end call" action on phones when in VC
+  try {
+    if(inVC){
+      navigator.mediaSession.setActionHandler("hangup", () => leaveVoiceChannel());
+    } else {
+      navigator.mediaSession.setActionHandler("hangup", null);
+    }
+  } catch {}
+}
 function keepAudioAlive(){if(audioCtx?.state==="suspended")audioCtx.resume();if(!silentNode)startSilentAudio();}
 function startKeepAlive(){clearInterval(keepAliveInterval);keepAliveInterval=setInterval(keepAudioAlive,2000);}
 document.addEventListener("visibilitychange",async()=>{if(audioCtx?.state==="suspended")await audioCtx.resume();await requestWakeLock();startSilentAudio();if(localStream&&!muted)localStream.getAudioTracks().forEach(t=>{t.enabled=true;});});
+
+/* ══ Phone Call Overlay ═══════════════════════════════════════════════════════ */
+let callTimerInterval=null,callStartTime=null;
+
+function showCallOverlay(vcName){
+  const ov=document.getElementById("call-overlay");
+  document.getElementById("call-overlay-channel").textContent=vcName;
+  document.getElementById("call-overlay-avatar").textContent=myEmoji||"🎙";
+  ov.classList.add("active");
+  callStartTime=Date.now();
+  clearInterval(callTimerInterval);
+  callTimerInterval=setInterval(()=>{
+    const s=Math.floor((Date.now()-callStartTime)/1000);
+    document.getElementById("call-overlay-timer").textContent=
+      String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+    // Update member count
+    if(joinedVoiceChannel){
+      const cnt=1+[...playerList.values()].filter(p=>p.group===joinedVoiceChannel&&p.name!==myName).length;
+      document.getElementById("call-overlay-members").textContent=cnt+" connected";
+    }
+  },1000);
+  updateCallOverlay();
+}
+
+function hideCallOverlay(){
+  document.getElementById("call-overlay").classList.remove("active");
+  clearInterval(callTimerInterval);callTimerInterval=null;
+}
+
+function updateCallOverlay(){
+  const mb=document.getElementById("call-mute-btn");
+  const db=document.getElementById("call-deafen-btn");
+  if(mb){mb.textContent=muted?"🔇":"🎙";mb.classList.toggle("is-muted",muted);}
+  if(db){db.textContent=deafened?"🔕":"🔊";db.classList.toggle("is-deafened",deafened);}
+}
 
 /* ══ PWA ═════════════════════════════════════════════════════════════════════ */
 document.head.appendChild(Object.assign(document.createElement("link"),{rel:"manifest",href:URL.createObjectURL(new Blob([JSON.stringify({name:"Nexus",short_name:"Nexus",start_url:"/",display:"standalone",background_color:"#313338",theme_color:"#5865f2"})],{type:"application/json"}))}));
@@ -2199,7 +2339,8 @@ const chatbotToggler = document.querySelector("#chatbot-toggler");
 const closeChatbot = document.querySelector("#close-chatbot");
 
 // API setup — key is set by the user in ⚙️ Settings → Chatbot API Key
-const API_KEY = () => localStorage.getItem("nexus_gemini_key") || "";
+const GEMINI_API_KEY = "paste-your-gemini-api-key-here"; // 👈 paste your Gemini API key here
+const API_KEY = () => GEMINI_API_KEY;
 const API_URL = () => `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY()}`;
 
 // Initialize user message and file data
