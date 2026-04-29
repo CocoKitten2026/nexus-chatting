@@ -2,8 +2,6 @@
 
 A self-hosted, privacy-first chat and voice platform built for schools and communities. Built with vanilla JavaScript and Bun — no frameworks, no tracking, no ads.
 
-> Built by a kid, adopted by a school. 🎉
-
 ---
 
 ## ✨ Features
