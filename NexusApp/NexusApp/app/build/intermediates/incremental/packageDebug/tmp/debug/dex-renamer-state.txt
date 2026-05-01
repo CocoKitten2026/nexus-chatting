@@ -1,4 +1,4 @@
-#Fri May 01 11:16:14 CST 2026
+#Fri May 01 16:31:02 CST 2026
 base.0=C\:\\Users\\Antonio Galindo\\Desktop\\Nexus-chatting\\NexusApp\\NexusApp\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
 base.1=C\:\\Users\\Antonio Galindo\\Desktop\\Nexus-chatting\\NexusApp\\NexusApp\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\2\\classes.dex
 path.0=0/classes.dex

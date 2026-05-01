@@ -8,78 +8,107 @@
 8        android:minSdkVersion="21"
 9        android:targetSdkVersion="34" />
 10
-11    <uses-permission android:name="android.permission.INTERNET" />
-11-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:5:5-67
-11-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:5:22-64
-12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-12-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:6:5-79
-12-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:6:22-76
-13    <uses-permission android:name="android.permission.CAMERA" />
-13-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:7:5-65
-13-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:7:22-62
-14    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-14-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:8:5-71
-14-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:8:22-68
-15    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-15-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:9:5-80
-15-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:9:22-77
-16    <uses-permission
-16-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:10:5-11:38
-17        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-17-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:10:22-78
-18        android:maxSdkVersion="28" />
-18-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:11:9-35
-19    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-19-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:12:5-80
-19-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:12:22-77
-20    <uses-permission android:name="android.permission.VIBRATE" />
-20-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:13:5-66
-20-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:13:22-63
-21    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-21-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:14:5-79
-21-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:14:22-76
+11    <!-- Network -->
+12    <uses-permission android:name="android.permission.INTERNET" />
+12-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:6:5-67
+12-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:6:22-64
+13    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+13-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:7:5-79
+13-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:7:22-76
+14
+15    <!-- Microphone – runtime prompt is handled in MainActivity -->
+16    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+16-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:10:5-71
+16-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:10:22-68
+17    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+17-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:11:5-80
+17-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:11:22-77
+18
+19    <!-- Background voice service -->
+20    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+20-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:14:5-77
+20-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:14:22-74
+21    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+21-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:15:5-88
+21-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:15:22-85
 22
-23    <application
-23-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:16:5-37:19
-24        android:allowBackup="true"
-24-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:17:9-35
-25        android:debuggable="true"
-26        android:extractNativeLibs="true"
-27        android:hardwareAccelerated="true"
-27-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:21:9-43
-28        android:icon="@mipmap/ic_launcher"
-28-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:18:9-43
-29        android:label="@string/app_name"
-29-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:19:9-41
-30        android:networkSecurityConfig="@xml/network_security_config"
-30-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:23:9-69
-31        android:theme="@style/AppTheme"
-31-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:20:9-40
-32        android:usesCleartextTraffic="true" >
-32-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:22:9-44
-33        <activity
-33-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:25:9-35:20
-34            android:name="com.nexus.app.MainActivity"
-34-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:26:13-41
-35            android:configChanges="orientation|screenSize|keyboardHidden"
-35-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:28:13-74
-36            android:exported="true"
-36-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:27:13-36
-37            android:screenOrientation="portrait"
-37-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:30:13-49
-38            android:windowSoftInputMode="adjustResize" >
-38-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:29:13-55
-39            <intent-filter>
-39-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:31:13-34:29
-40                <action android:name="android.intent.action.MAIN" />
-40-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:32:17-69
-40-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:32:25-66
-41
-42                <category android:name="android.intent.category.LAUNCHER" />
-42-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:33:17-77
-42-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:33:27-74
-43            </intent-filter>
-44        </activity>
-45    </application>
+23    <!-- Camera (for video, optional) -->
+24    <uses-permission android:name="android.permission.CAMERA" />
+24-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:18:5-65
+24-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:18:22-62
+25
+26    <!-- File access -->
+27    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+27-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:21:5-80
+27-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:21:22-77
+28    <uses-permission
+28-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:22:5-23:38
+29        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+29-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:22:22-78
+30        android:maxSdkVersion="28" />
+30-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:23:9-35
+31
+32    <!-- Misc -->
+33    <uses-permission android:name="android.permission.VIBRATE" />
+33-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:26:5-66
+33-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:26:22-63
+34    <uses-permission android:name="android.permission.REORDER_TASKS" />
+34-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:27:5-72
+34-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:27:22-69
+35
+36    <application
+36-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:29:5-57:19
+37        android:allowBackup="true"
+37-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:30:9-35
+38        android:debuggable="true"
+39        android:extractNativeLibs="true"
+40        android:hardwareAccelerated="true"
+40-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:34:9-43
+41        android:icon="@mipmap/ic_launcher"
+41-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:31:9-43
+42        android:label="@string/app_name"
+42-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:32:9-41
+43        android:networkSecurityConfig="@xml/network_security_config"
+43-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:36:9-69
+44        android:theme="@style/AppTheme"
+44-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:33:9-40
+45        android:usesCleartextTraffic="true" >
+45-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:35:9-44
 46
-47</manifest>
+47        <!-- Main activity -->
+48        <activity
+48-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:39:9-49:20
+49            android:name="com.nexus.app.MainActivity"
+49-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:40:13-41
+50            android:configChanges="orientation|screenSize|keyboardHidden"
+50-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:42:13-74
+51            android:exported="true"
+51-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:41:13-36
+52            android:screenOrientation="portrait"
+52-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:44:13-49
+53            android:windowSoftInputMode="adjustResize" >
+53-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:43:13-55
+54            <intent-filter>
+54-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:45:13-48:29
+55                <action android:name="android.intent.action.MAIN" />
+55-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:46:17-69
+55-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:46:25-66
+56
+57                <category android:name="android.intent.category.LAUNCHER" />
+57-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:47:17-77
+57-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:47:27-74
+58            </intent-filter>
+59        </activity>
+60
+61        <!-- Background voice foreground service -->
+62        <service
+62-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:52:9-55:58
+63            android:name="com.nexus.app.VoiceService"
+63-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:53:13-41
+64            android:exported="false"
+64-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:54:13-37
+65            android:foregroundServiceType="microphone" />
+65-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:55:13-55
+66    </application>
+67
+68</manifest>
