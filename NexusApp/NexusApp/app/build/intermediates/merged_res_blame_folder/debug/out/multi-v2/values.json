@@ -1,0 +1,55 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.nexus.app-mergeDebugResources-2:/values/values.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Antonio Galindo\\Desktop\\Nexus-chatting\\NexusApp\\NexusApp\\app\\src\\main\\res\\values\\themes.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "9",
+                        "endColumns": "12",
+                        "endOffsets": "532"
+                    },
+                    "to": {
+                        "startLines": "6",
+                        "startColumns": "4",
+                        "startOffsets": "221",
+                        "endLines": "13",
+                        "endColumns": "12",
+                        "endOffsets": "698"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\Antonio Galindo\\Desktop\\Nexus-chatting\\NexusApp\\NexusApp\\app\\src\\main\\res\\values\\colors.xml",
+                    "from": {
+                        "startLines": "2,3,4",
+                        "startColumns": "4,4,4",
+                        "startOffsets": "55,96,138",
+                        "endColumns": "40,41,39",
+                        "endOffsets": "91,133,173"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\Antonio Galindo\\Desktop\\Nexus-chatting\\NexusApp\\NexusApp\\app\\src\\main\\res\\values\\strings.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "42",
+                        "endOffsets": "93"
+                    },
+                    "to": {
+                        "startLines": "5",
+                        "startColumns": "4",
+                        "startOffsets": "178",
+                        "endColumns": "42",
+                        "endOffsets": "216"
+                    }
+                }
+            ]
+        }
+    ]
+}

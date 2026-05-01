@@ -1,0 +1,2824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexus</title>
+  <meta name="theme-color" content="#5865f2" />
+  <!-- Chatbot: Google Inter font -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Nexus" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-sidebar:#1e1f22; --bg-channels:#2b2d31; --bg-main:#313338; --bg-input:#383a40;
+      --bg-hover:#35373c; --bg-active:#404249; --accent:#5865f2; --accent-d:#4752c4; --accent-l:#7289da;
+      --online:#23a55a; --offline:#80848e; --danger:#f23f43; --warning:#f0b232;
+      --text:#dbdee1; --text-muted:#80848e; --text-dimmed:#4e5058; --radius:4px;
+    }
+    body.theme-light  { --bg-sidebar:#e3e5e8;--bg-channels:#f2f3f5;--bg-main:#fff;--bg-input:#ebedef;--bg-hover:#d7d9dc;--bg-active:#c5c7cb;--text:#2e3338;--text-muted:#6d6f78;--text-dimmed:#96989d; }
+    body.theme-amoled { --bg-sidebar:#000;--bg-channels:#050505;--bg-main:#0a0a0a;--bg-input:#111;--bg-hover:#1a1a1a;--bg-active:#222; }
+    body.theme-green  { --bg-sidebar:#0f1f0f;--bg-channels:#162316;--bg-main:#1a2b1a;--bg-input:#1f321f;--bg-hover:#243a24;--bg-active:#2a432a;--accent:#4caf50;--accent-d:#388e3c;--accent-l:#81c784; }
+    html,body{height:100%;overflow:hidden;background:var(--bg-main);color:var(--text);font-family:"gg sans","Noto Sans",Whitney,"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:15px;}
+    ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bg-active);border-radius:3px}
+    [hidden]{display:none!important}
+    #app{height:100%;display:flex;flex-direction:column}
+
+    /* ── Connect screen ─────────────────────────── */
+    #screen-connect{flex:1;display:flex;align-items:center;justify-content:center;background:var(--bg-main);padding:20px;}
+    .connect-card{background:var(--bg-channels);border-radius:8px;padding:32px;width:100%;max-width:460px;display:flex;flex-direction:column;gap:18px;box-shadow:0 8px 40px rgba(0,0,0,.5);}
+    .connect-logo{text-align:center;}
+    .nexus-wordmark{font-size:32px;font-weight:800;color:var(--accent-l);letter-spacing:-1px;}
+    .nexus-icon{font-size:52px;display:block;margin-bottom:6px;}
+    .connect-logo p{color:var(--text-muted);font-size:13px;margin-top:4px;}
+
+    .auth-tabs{display:flex;border-bottom:1px solid var(--bg-active);}
+    .auth-tab{flex:1;padding:10px;text-align:center;cursor:pointer;font-size:14px;font-weight:700;color:var(--text-muted);border-bottom:2px solid transparent;transition:color .15s,border-color .15s;user-select:none;}
+    .auth-tab.active{color:var(--accent-l);border-bottom-color:var(--accent);}
+
+    .form-group{display:flex;flex-direction:column;gap:5px;}
+    .form-label{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);}
+    .form-input{background:var(--bg-main);border:1px solid var(--bg-sidebar);border-radius:var(--radius);padding:10px 12px;color:var(--text);font-size:15px;outline:none;transition:border-color .15s;width:100%;}
+    .form-input:focus{border-color:var(--accent);}
+    .form-hint{font-size:12px;color:var(--text-muted);}
+
+    .avatar-row{display:flex;align-items:center;gap:14px;}
+    .avatar-big{font-size:44px;cursor:pointer;user-select:none;transition:transform .15s;line-height:1;}
+    .avatar-big:hover{transform:scale(1.1);}
+    .emoji-grid-wrap{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;background:var(--bg-main);border-radius:var(--radius);max-height:0;overflow:hidden;transition:max-height .25s;}
+    .emoji-grid-wrap.open{max-height:180px;padding:6px;overflow-y:auto;}
+    .emoji-grid-wrap span{font-size:20px;text-align:center;cursor:pointer;border-radius:3px;padding:3px;display:block;transition:background .1s;}
+    .emoji-grid-wrap span:hover{background:var(--bg-hover);}
+    .emoji-grid-wrap span.selected{background:var(--accent-d);}
+
+    .btn-primary{background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:12px;font-size:15px;font-weight:600;cursor:pointer;transition:background .15s;width:100%;}
+    .btn-primary:hover{background:var(--accent-d);}
+    .btn-primary:disabled{opacity:.6;cursor:default;}
+
+    .auth-error{color:var(--danger);font-size:13px;min-height:18px;font-weight:600;text-align:center;}
+    .server-row{display:flex;align-items:center;gap:6px;}
+    .server-row .form-input{flex:1;}
+    .clear-btn{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:4px;border-radius:3px;transition:color .1s;flex-shrink:0;}
+    .clear-btn:hover{color:var(--danger);}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--text-dimmed);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;}
+
+    /* ── Main layout ────────────────────────────── */
+    #screen-main{flex:1;display:grid;grid-template-columns:240px 1fr 240px;overflow:hidden;min-height:0;}
+    #sidebar-left{background:var(--bg-channels);display:flex;flex-direction:column;overflow:hidden;}
+    .server-header{height:48px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:15px;border-bottom:1px solid rgba(0,0,0,.25);cursor:pointer;user-select:none;flex-shrink:0;transition:background .1s;}
+    .server-header:hover{background:var(--bg-hover);}
+    #channels-scroll{flex:1;overflow-y:auto;padding:8px 0 4px;}
+    .category-header{display:flex;align-items:center;justify-content:space-between;padding:14px 8px 4px 16px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);}
+    .cat-add{font-size:16px;cursor:pointer;transition:color .1s;}.cat-add:hover{color:var(--text);}
+    .channel-item{display:flex;align-items:center;gap:6px;padding:5px 8px 5px 16px;margin:1px 8px;border-radius:var(--radius);cursor:pointer;color:var(--text-muted);font-size:15px;transition:background .1s,color .1s;position:relative;}
+    .channel-item:hover{background:var(--bg-hover);color:var(--text);}
+    .channel-item.active{background:var(--bg-active);color:var(--text);}
+    .ch-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;}
+    .ch-unread{background:var(--danger);color:#fff;border-radius:99px;font-size:11px;font-weight:700;padding:0 5px;min-width:18px;text-align:center;}
+    .vc-members-list{padding:2px 8px 4px 34px;}
+    .vc-member-row{display:flex;align-items:center;gap:6px;padding:2px 4px;border-radius:var(--radius);font-size:13px;color:var(--text-muted);}
+    .vc-member-row.speaking .vcm-name{color:var(--online);}
+    .vcm-avatar{font-size:14px;}.vcm-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    #vc-status-bar{background:#232428;border-top:1px solid rgba(0,0,0,.25);padding:8px;flex-shrink:0;}
+    .vc-sb-connected{font-size:12px;color:var(--online);font-weight:700;}
+    .vc-sb-channel{font-size:11px;color:var(--text-muted);margin:1px 0 6px;}
+    .vc-sb-user{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+    .vsb-name{font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;}
+    .vc-leave-btn{width:100%;background:transparent;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;text-align:left;padding:2px 0;transition:color .1s;}
+    .vc-leave-btn:hover{color:var(--danger);}
+    #user-bar{background:#1a1b1e;display:flex;align-items:center;gap:8px;padding:8px;flex-shrink:0;min-height:52px;}
+    .ub-avatar{font-size:26px;cursor:pointer;flex-shrink:0;}
+    .ub-info{flex:1;min-width:0;}
+    .ub-name{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .ub-tag{font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;}
+    .ub-controls{display:flex;gap:2px;flex-shrink:0;}
+    .ub-btn{background:transparent;border:none;border-radius:var(--radius);color:var(--text-muted);font-size:17px;cursor:pointer;padding:4px 6px;transition:background .1s,color .1s;}
+    .ub-btn:hover{background:var(--bg-hover);color:var(--text);}
+    .ub-btn.active-muted{color:var(--danger);}
+
+    /* ── Main panel ──────────────────────────────── */
+    #main-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--bg-main);}
+    #channel-header{height:48px;padding:0 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(0,0,0,.25);flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.15);}
+    .hdr-icon{font-size:20px;color:var(--text-muted);flex-shrink:0;}
+    .hdr-name{font-weight:700;font-size:15px;}
+    .hdr-divider{width:1px;height:20px;background:var(--text-dimmed);flex-shrink:0;}
+    .hdr-topic{font-size:13px;color:var(--text-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .hdr-actions{display:flex;gap:4px;margin-left:auto;}
+    .hdr-btn{background:transparent;border:none;border-radius:var(--radius);color:var(--text-muted);font-size:17px;cursor:pointer;padding:5px 8px;transition:background .1s,color .1s;}
+    .hdr-btn:hover{background:var(--bg-hover);color:var(--text);}
+    .hdr-btn.active{color:var(--text);}
+
+    #vc-view{flex:1;overflow-y:auto;display:flex;flex-direction:column;padding:24px;}
+    .vc-hero{text-align:center;color:var(--text-muted);padding:32px 20px 20px;}
+    .vc-hero-icon{font-size:72px;margin-bottom:12px;display:block;}
+    .vc-hero h2{font-size:24px;color:var(--text);font-weight:800;margin-bottom:8px;}
+    .vc-hero p{font-size:14px;margin-bottom:24px;}
+    .vc-join-btn{background:var(--online);color:#fff;border:none;border-radius:99px;padding:12px 32px;font-size:15px;font-weight:700;cursor:pointer;transition:filter .15s;}
+    .vc-join-btn:hover{filter:brightness(1.1);}
+    .vc-join-btn.leave{background:var(--danger);}
+    #vc-participants-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:8px 0 16px;}
+    .vc-card{background:var(--bg-channels);border-radius:8px;padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;transition:box-shadow .2s;position:relative;}
+    .vc-card.speaking{box-shadow:0 0 0 2px var(--online),0 0 12px rgba(35,165,90,.3);}
+    .vc-ca{font-size:52px;}.vc-cn{font-size:14px;font-weight:700;word-break:break-all;}.vc-cs{font-size:11px;color:var(--text-muted);}
+    .vc-mm{position:absolute;bottom:8px;right:8px;font-size:14px;}
+    .vol-meter{display:flex;gap:2px;align-items:flex-end;height:14px;width:44px;}
+    .vm-bar{flex:1;border-radius:1px;background:var(--bg-active);transition:background .08s;}
+    .vm-bar.b1{height:25%}.vm-bar.b2{height:50%}.vm-bar.b3{height:75%}.vm-bar.b4{height:100%}
+    .vm-bar.lit{background:var(--online);}
+
+    #chat-view{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+    #messages-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+    #messages-list{display:flex;flex-direction:column;justify-content:flex-end;min-height:100%;}
+
+    /* ── Reply system ──────────────────────────────── */
+    .msg-group{position:relative;}
+    .msg-group:hover .msg-reply-btn,.msg-cont:hover .msg-reply-btn{opacity:1;}
+    .msg-reply-btn{opacity:0;position:absolute;right:8px;top:4px;background:var(--bg-input);border:none;border-radius:4px;color:var(--text-muted);cursor:pointer;font-size:13px;padding:2px 8px;transition:opacity .15s;}
+    .msg-reply-btn:hover{background:var(--bg-hover);color:var(--text);}
+    .reply-quote{background:var(--bg-channels);border-left:3px solid var(--accent);border-radius:0 4px 4px 0;padding:4px 8px;margin-bottom:4px;font-size:12px;color:var(--text-muted);cursor:pointer;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+    .reply-quote b{color:var(--accent-l);}
+    #reply-preview{display:none;align-items:center;gap:8px;padding:6px 12px;background:var(--bg-channels);border-top:1px solid rgba(0,0,0,.2);font-size:13px;}
+    #reply-preview.active{display:flex;}
+    #reply-preview-text{flex:1;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    #reply-preview-text b{color:var(--accent-l);}
+    #reply-cancel{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;padding:0 4px;}
+    .chan-welcome{padding:24px 16px 8px;}
+    .chan-welcome .cw-icon{font-size:56px;margin-bottom:12px;display:block;}
+    .chan-welcome h2{font-size:26px;font-weight:800;margin-bottom:6px;}
+    .chan-welcome p{font-size:14px;color:var(--text-muted);}
+    .date-divider{display:flex;align-items:center;gap:12px;padding:16px 16px 8px;font-size:12px;font-weight:700;color:var(--text-muted);}
+    .date-divider::before,.date-divider::after{content:"";flex:1;height:1px;background:var(--bg-hover);}
+    .msg-group{display:flex;gap:14px;padding:4px 16px;transition:background .05s;}
+    .msg-group:hover{background:rgba(0,0,0,.05);}
+    .mg-av{font-size:30px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+    .mg-body{flex:1;min-width:0;}
+    .mg-header{display:flex;align-items:baseline;gap:8px;margin-bottom:3px;}
+    .mg-author{font-weight:700;font-size:15px;cursor:pointer;}.mg-author:hover{text-decoration:underline;}
+    .mg-time{font-size:11px;color:var(--text-muted);}
+    .mg-text{font-size:15px;line-height:1.45;word-break:break-word;white-space:pre-wrap;}
+    .msg-cont{padding:1px 16px 1px 70px;transition:background .05s;display:flex;align-items:flex-start;gap:6px;}
+    .msg-cont:hover{background:rgba(0,0,0,.05);}
+    .mc-time{font-size:10px;color:var(--text-muted);white-space:nowrap;opacity:0;padding-top:3px;min-width:44px;}
+    .msg-cont:hover .mc-time{opacity:1;}
+    .mc-text{font-size:15px;line-height:1.45;word-break:break-word;white-space:pre-wrap;flex:1;}
+    .system-msg{display:flex;align-items:center;gap:10px;padding:4px 16px;font-size:13px;color:var(--text-muted);}
+    .sys-icon{font-size:16px;flex-shrink:0;}
+
+    #input-area{padding:0 16px 16px;flex-shrink:0;}
+
+    /* Nexus emoji picker wrapper — display toggled directly in JS, no body class */
+    #nexus-emoji-wrap {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 8px);
+      right: 40px;
+      z-index: 9000;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,.5);
+    }
+    body.show-nexus-emoji-picker #nexus-emoji-btn {
+      color: var(--accent-l);
+      background: var(--bg-active);
+    }
+    .msg-input-box{background:var(--bg-input);border-radius:8px;display:flex;align-items:flex-end;gap:4px;padding:4px 12px;}
+    .mib-btn{background:transparent;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;padding:6px 4px;border-radius:var(--radius);transition:color .1s;flex-shrink:0;}
+    .mib-btn:hover{color:var(--text);}
+    #message-input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:15px;resize:none;padding:8px 0;max-height:200px;line-height:1.4;font-family:inherit;}
+    #message-input::placeholder{color:var(--text-muted);}
+    .mib-send{color:var(--accent);}.mib-send:hover{color:var(--accent-l);}
+    #typing-bar{padding:2px 16px 2px;min-height:20px;font-size:12px;color:var(--text-muted);flex-shrink:0;}
+
+    /* ── Right sidebar ───────────────────────────── */
+    #sidebar-right{background:var(--bg-channels);overflow-y:auto;padding:16px 8px;display:flex;flex-direction:column;}
+    .members-label{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);padding:6px 8px 4px;}
+    .member-row{display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:var(--radius);cursor:pointer;transition:background .1s;}
+    .member-row:hover{background:var(--bg-hover);}
+    .mr-av{font-size:24px;position:relative;flex-shrink:0;}
+    .status-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--bg-channels);background:var(--online);position:absolute;bottom:-1px;right:-1px;}
+    .mr-info{flex:1;min-width:0;}
+    .mr-name{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .mr-activity{font-size:11px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+    /* ── Notifications ───────────────────────────── */
+    #notifications{position:fixed;bottom:16px;right:16px;display:flex;flex-direction:column;gap:8px;pointer-events:none;z-index:999;}
+    .notif{background:var(--bg-channels);border-radius:8px;padding:12px 16px;font-size:13px;animation:slideUp .2s ease;max-width:300px;box-shadow:0 4px 20px rgba(0,0,0,.4);border-left:3px solid var(--text-dimmed);}
+    .notif.success{border-left-color:var(--online);}.notif.error{border-left-color:var(--danger);}.notif.info{border-left-color:var(--accent);}
+    @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+    /* ── Modals ──────────────────────────────────── */
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:500;}
+    .modal-card{background:var(--bg-channels);border-radius:8px;padding:24px;width:460px;max-width:92vw;display:flex;flex-direction:column;gap:16px;box-shadow:0 8px 40px rgba(0,0,0,.5);}
+    .modal-card h2{font-size:20px;font-weight:800;}
+    .modal-btns{display:flex;gap:8px;justify-content:flex-end;}
+    .btn-ghost{background:transparent;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:10px 16px;border-radius:var(--radius);}
+    .btn-ghost:hover{text-decoration:underline;color:var(--text);}
+    .btn-solid{background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;}
+    .btn-solid:hover{background:var(--accent-d);}
+    .settings-sec{display:flex;flex-direction:column;gap:8px;}
+    .settings-sec h3{font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;color:var(--text-muted);}
+    .settings-sec select{background:var(--bg-main);border:1px solid var(--bg-sidebar);border-radius:var(--radius);padding:8px 10px;color:var(--text);font-size:14px;width:100%;outline:none;cursor:pointer;}
+    .vol-row{display:flex;align-items:center;gap:10px;}
+    .vol-row label{font-size:13px;color:var(--text-muted);white-space:nowrap;}
+    .vol-row input[type=range]{flex:1;accent-color:var(--accent);}
+    .vol-val{font-size:12px;color:var(--text-muted);width:36px;text-align:right;}
+    #waveform{width:100%;height:36px;border-radius:var(--radius);display:block;background:var(--bg-main);}
+    .theme-picker{display:flex;gap:8px;flex-wrap:wrap;}
+    .theme-dot{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;}
+    .theme-dot:hover{transform:scale(1.15);}
+    .theme-dot.active{border-color:white;box-shadow:0 0 0 2px var(--accent);}
+    .conn-badge{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);}
+    .conn-dot{width:8px;height:8px;border-radius:50%;background:var(--online);}
+    .conn-dot.offline{background:var(--offline);}
+    .conn-dot.reconnecting{background:var(--warning);animation:pulse 1s infinite;}
+
+    /* ── Phone Call Overlay ──────────────────────────────── */
+    #call-overlay{display:none;position:fixed;inset:0;z-index:9500;background:linear-gradient(160deg,#111f11 0%,#0a150a 60%,#0d1a10 100%);flex-direction:column;align-items:center;justify-content:space-between;padding:max(env(safe-area-inset-top),44px) 24px max(env(safe-area-inset-bottom),36px);font-family:-apple-system,'SF Pro Display','Segoe UI',sans-serif;animation:callFadeIn .3s ease;}
+    #call-overlay.active{display:flex;}
+    @keyframes callFadeIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+    .call-top-bar{width:100%;display:flex;align-items:center;justify-content:space-between;color:rgba(255,255,255,.45);font-size:13px;font-weight:600;}
+    .call-top-bar .call-app-name{color:#23a55a;font-weight:700;letter-spacing:.3px;}
+    .call-center{display:flex;flex-direction:column;align-items:center;gap:28px;}
+    .call-ring-wrap{position:relative;width:136px;height:136px;}
+    .call-ring-pulse{position:absolute;inset:0;border-radius:50%;background:rgba(35,165,90,.12);animation:ringPulse 2.2s ease-in-out infinite;}
+    .call-ring-pulse2{position:absolute;inset:-14px;border-radius:50%;border:1.5px solid rgba(35,165,90,.2);animation:ringPulse 2.2s ease-in-out infinite .55s;}
+    .call-ring-pulse3{position:absolute;inset:-28px;border-radius:50%;border:1px solid rgba(35,165,90,.1);animation:ringPulse 2.2s ease-in-out infinite 1.1s;}
+    @keyframes ringPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.07);opacity:.5}}
+    .call-avatar-circle{position:absolute;inset:0;border-radius:50%;background:rgba(35,165,90,.18);border:2px solid rgba(35,165,90,.4);display:flex;align-items:center;justify-content:center;font-size:62px;line-height:1;}
+    .call-info{text-align:center;}
+    .call-channel-name{font-size:30px;font-weight:700;color:#fff;letter-spacing:-.5px;margin-bottom:5px;}
+    .call-label{font-size:14px;color:rgba(255,255,255,.5);margin-bottom:10px;letter-spacing:.3px;}
+    .call-timer{font-size:24px;font-weight:600;color:#23a55a;font-variant-numeric:tabular-nums;letter-spacing:2px;}
+    .call-controls{display:flex;gap:32px;align-items:center;justify-content:center;}
+    .call-ctrl{width:68px;height:68px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;transition:transform .12s,opacity .12s;-webkit-tap-highlight-color:transparent;outline:none;}
+    .call-ctrl:active{transform:scale(.9);opacity:.8;}
+    .call-ctrl-mute{background:rgba(255,255,255,.13);}
+    .call-ctrl-mute.is-muted{background:rgba(242,63,67,.25);box-shadow:0 0 0 2px rgba(242,63,67,.4);}
+    .call-ctrl-deafen{background:rgba(255,255,255,.13);}
+    .call-ctrl-deafen.is-deafened{background:rgba(242,63,67,.25);box-shadow:0 0 0 2px rgba(242,63,67,.4);}
+    .call-ctrl-end{background:#f23f43;width:76px;height:76px;font-size:28px;box-shadow:0 4px 20px rgba(242,63,67,.45);}
+    .call-bottom-hint{font-size:12px;color:rgba(255,255,255,.25);text-align:center;letter-spacing:.3px;}
+
+    @media(max-width:900px){#screen-main{grid-template-columns:240px 1fr}#sidebar-right{display:none}}
+
+    /* ── DM Panel ───────────────────────────────────── */
+    #dm-panel{position:fixed;top:0;right:0;width:320px;height:100%;background:var(--bg-channels);z-index:4000;display:flex;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,.4);transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);}
+    #dm-panel.open{transform:translateX(0);}
+    .dm-panel-header{height:48px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(0,0,0,.25);font-weight:700;font-size:15px;flex-shrink:0;}
+    .dm-panel-header button{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;padding:4px 8px;border-radius:4px;}
+    .dm-panel-header button:hover{background:var(--bg-hover);color:var(--text);}
+    .dm-new-btn{background:var(--accent)!important;color:#fff!important;font-size:13px!important;font-weight:700;padding:4px 10px!important;border-radius:4px;}
+    .dm-list{flex:1;overflow-y:auto;padding:8px;}
+    .dm-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;transition:background .1s;}
+    .dm-item:hover{background:var(--bg-hover);}
+    .dm-item.active{background:var(--bg-active);}
+    .dm-av{font-size:28px;line-height:1;flex-shrink:0;}
+    .dm-info{flex:1;min-width:0;}
+    .dm-name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .dm-preview{font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .dm-unread{background:var(--danger);color:#fff;border-radius:10px;font-size:11px;font-weight:700;padding:1px 6px;flex-shrink:0;}
+    #dm-chat{position:fixed;inset:0;z-index:4500;background:var(--bg-main);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);}
+    #dm-chat.open{transform:translateX(0);}
+    .dm-chat-header{height:48px;padding:0 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(0,0,0,.25);flex-shrink:0;}
+    .dm-chat-header .back-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:20px;padding:4px 8px;border-radius:4px;}
+    .dm-chat-name{font-weight:700;font-size:15px;flex:1;}
+    .dm-vc-btn{background:var(--online);border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:13px;font-weight:700;padding:6px 12px;}
+    #dm-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:4px;}
+    .dm-msg{display:flex;align-items:flex-start;gap:8px;padding:4px 8px;border-radius:6px;}
+    .dm-msg:hover{background:var(--bg-hover);}
+    .dm-msg.mine{flex-direction:row-reverse;}
+    .dm-msg-av{font-size:24px;flex-shrink:0;}
+    .dm-msg-bubble{background:var(--bg-input);border-radius:12px;padding:8px 12px;max-width:75%;font-size:14px;line-height:1.4;}
+    .dm-msg.mine .dm-msg-bubble{background:var(--accent);color:#fff;}
+    .dm-msg-time{font-size:11px;color:var(--text-muted);margin-top:3px;}
+    .dm-vc-invite{background:var(--bg-channels);border:1px solid var(--online);border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;}
+    .dm-vc-invite-text{flex:1;font-size:13px;}
+    .dm-vc-invite-text b{color:var(--online);}
+    .dm-vc-accept{background:var(--online);border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:12px;font-weight:700;padding:6px 12px;}
+    #dm-input-row{padding:12px 16px;border-top:1px solid rgba(0,0,0,.2);display:flex;gap:8px;}
+    #dm-input{flex:1;background:var(--bg-input);border:none;border-radius:8px;color:var(--text);font-size:14px;padding:10px 14px;outline:none;resize:none;}
+    #dm-send-btn{background:var(--accent);border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:18px;padding:8px 14px;}
+    #dm-picker{position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;}
+    .dm-picker-card{background:var(--bg-channels);border-radius:10px;padding:20px;width:340px;max-width:92vw;display:flex;flex-direction:column;gap:12px;}
+    .dm-picker-card h3{font-size:16px;font-weight:700;}
+    .dm-picker-list{display:flex;flex-direction:column;gap:4px;max-height:300px;overflow-y:auto;}
+    .dm-picker-user{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;transition:background .1s;}
+    .dm-picker-user:hover{background:var(--bg-hover);}
+    .dm-picker-close{background:var(--bg-input);border:none;border-radius:6px;color:var(--text);cursor:pointer;font-size:14px;font-weight:600;padding:8px;width:100%;}
+    @media(max-width:600px){#screen-main{grid-template-columns:1fr}#sidebar-left{display:none}}
+
+    /* Explicit desktop reset — ensure mobile sidebar styles never leak above 600px */
+    @media(min-width:601px){
+      #sidebar-left{
+        position:static !important;
+        transform:none !important;
+        display:flex !important;
+        box-shadow:none !important;
+        z-index:auto !important;
+      }
+      #sidebar-overlay { display:none !important; }
+      #swipe-hint      { display:none !important; }
+    }
+
+    /* ── Mobile swipe sidebar ────────────────────────────────────── */
+    @media(max-width:600px){
+      #sidebar-left {
+        display: flex !important;
+        position: fixed;
+        top: 0; left: 0; bottom: 0;
+        width: 280px;
+        z-index: 800;
+        transform: translateX(-100%);
+        transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+        box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+      }
+      #sidebar-left.sidebar-open {
+        transform: translateX(0);
+      }
+      #sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.55);
+        z-index: 799;
+        backdrop-filter: blur(1px);
+      }
+      #sidebar-overlay.visible {
+        display: block;
+      }
+      /* Swipe hint indicator */
+      #swipe-hint {
+        position: fixed;
+        left: 0; top: 50%;
+        transform: translateY(-50%);
+        width: 6px;
+        height: 80px;
+        background: var(--accent);
+        border-radius: 0 6px 6px 0;
+        opacity: 0.85;
+        z-index: 798;
+        pointer-events: none;
+        transition: opacity 0.3s;
+        box-shadow: 2px 0 8px rgba(88,101,242,0.5);
+      }
+      body.show-chatbot #swipe-hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Phone Call Overlay (shows when in voice channel — keeps mic alive in background) -->
+  <div id="call-overlay">
+    <div class="call-top-bar">
+      <span class="call-app-name">⬡ NEXUS VOICE</span>
+      <span id="call-overlay-members">1 connected</span>
+    </div>
+    <div class="call-center">
+      <div class="call-ring-wrap">
+        <div class="call-ring-pulse3"></div>
+        <div class="call-ring-pulse2"></div>
+        <div class="call-ring-pulse"></div>
+        <div class="call-avatar-circle" id="call-overlay-avatar">🎙</div>
+      </div>
+      <div class="call-info">
+        <div class="call-channel-name" id="call-overlay-channel">Voice Channel</div>
+        <div class="call-label">Voice call in progress</div>
+        <div class="call-timer" id="call-overlay-timer">00:00</div>
+      </div>
+    </div>
+    <div>
+      <div class="call-controls">
+        <button class="call-ctrl call-ctrl-deafen" id="call-deafen-btn"
+          onclick="toggleDeafen();updateCallOverlay();" title="Deafen">🔊</button>
+        <button class="call-ctrl call-ctrl-end" id="call-end-btn"
+          onclick="leaveVoiceChannel();" title="End Call">📵</button>
+        <button class="call-ctrl call-ctrl-mute" id="call-mute-btn"
+          onclick="toggleMute();updateCallOverlay();" title="Mute/Unmute">🎙</button>
+      </div>
+      <div class="call-bottom-hint">🔴 Mic stays active · Switch apps freely</div>
+    </div>
+  </div>
+
+
+  <!-- DM Panel -->
+  <div id="dm-panel">
+    <div class="dm-panel-header">
+      <span>💬 Messages</span>
+      <div style="display:flex;gap:6px;">
+        <button class="dm-new-btn" onclick="openDMPicker()">+ New</button>
+        <button onclick="toggleDMPanel()">✕</button>
+      </div>
+    </div>
+    <div class="dm-list" id="dm-list">
+      <div style="color:var(--text-muted);font-size:13px;text-align:center;padding:24px 0;">No conversations yet.<br>Click + New to start one!</div>
+    </div>
+  </div>
+
+  <!-- DM Chat Window -->
+  <div id="dm-chat">
+    <div class="dm-chat-header">
+      <button class="back-btn" onclick="closeDMChat()">←</button>
+      <span id="dm-chat-av" style="font-size:24px;">👤</span>
+      <span class="dm-chat-name" id="dm-chat-name">User</span>
+      <button class="dm-vc-btn" onclick="sendDMVoiceInvite()">📞 Call</button>
+    </div>
+    <div id="dm-messages"></div>
+    <div id="dm-input-row">
+      <textarea id="dm-input" rows="1" placeholder="Message..." onkeydown="dmInputKey(event)"></textarea>
+      <button id="dm-send-btn" onclick="sendDMMessage()">➤</button>
+    </div>
+  </div>
+
+  <!-- User Picker -->
+  <div id="dm-picker" hidden onclick="if(event.target===this)this.hidden=true">
+    <div class="dm-picker-card">
+      <h3>New Message</h3>
+      <div class="dm-picker-list" id="dm-picker-list"></div>
+      <button class="dm-picker-close" onclick="document.getElementById('dm-picker').hidden=true">Cancel</button>
+    </div>
+  </div>
+
+  <div id="screen-banned" hidden style="
+    position:fixed;inset:0;background:#0a0a0f;display:flex;align-items:center;
+    justify-content:center;z-index:99999;padding:24px;
+  ">
+    <div style="
+      background:#111118;border:1px solid #3d0000;border-radius:12px;
+      max-width:540px;width:100%;padding:40px 36px;text-align:center;
+      box-shadow:0 0 60px rgba(200,0,0,0.15);font-family:'Inter',sans-serif;
+    ">
+      <div style="font-size:52px;margin-bottom:16px;">🚫</div>
+      <h1 style="color:#ff4444;font-size:22px;font-weight:800;margin-bottom:8px;letter-spacing:-0.5px;">
+        Your account has been suspended
+      </h1>
+      <div style="width:48px;height:3px;background:#3d0000;border-radius:2px;margin:0 auto 24px;"></div>
+
+      <p style="color:#aaa;font-size:14px;line-height:1.7;margin-bottom:24px;">
+        After a review of your activity on <strong style="color:#ddd;">Nexus</strong>, your account has been
+        permanently suspended for violating our Community Guidelines.
+      </p>
+
+      <div style="
+        background:#1a0000;border:1px solid #3d0000;border-radius:8px;
+        padding:16px 20px;margin-bottom:24px;text-align:left;
+      ">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#666;margin-bottom:6px;">
+          Reason for suspension
+        </div>
+        <div id="ban-reason-text" style="color:#ff8080;font-size:14px;line-height:1.6;"></div>
+      </div>
+
+      <div style="
+        background:#111;border:1px solid #222;border-radius:8px;
+        padding:16px 20px;margin-bottom:28px;text-align:left;
+      ">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#666;margin-bottom:10px;">
+          What this means
+        </div>
+        <ul style="color:#888;font-size:13px;line-height:2;padding-left:18px;margin:0;">
+          <li>You are permanently banned from this Nexus server</li>
+          <li>Your account and all associated data has been flagged</li>
+          <li>Any attempt to create a new account may result in further action</li>
+          <li>This decision is final and cannot be appealed</li>
+        </ul>
+      </div>
+
+      <div style="
+        border-top:1px solid #1e1e1e;padding-top:20px;
+        color:#555;font-size:12px;line-height:1.8;
+      ">
+        <div style="margin-bottom:4px;">If you believe this is a mistake, contact the server administrator.</div>
+        <div style="margin-top:12px;color:#444;">
+          Banned on: <span id="ban-date-text" style="color:#555;"></span>
+        </div>
+        <div style="margin-top:16px;font-weight:700;color:#666;font-size:13px;letter-spacing:0.5px;">
+          — Nexus Security Team
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="screen-connect">
+    <div class="connect-card">
+      <div class="connect-logo">
+        <span class="nexus-icon">💬</span>
+        <div class="nexus-wordmark">NEXUS</div>
+        <p>Your space to talk, chat, and hang out</p>
+      </div>
+
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-login"    onclick="switchTab('login')">Sign In</div>
+        <div class="auth-tab"        id="tab-register" onclick="switchTab('register')">Create Account</div>
+      </div>
+
+      <!-- SIGN IN -->
+      <div id="form-login" style="display:flex;flex-direction:column;gap:14px;">
+        <div class="form-group">
+          <label class="form-label" for="li-name">Username</label>
+          <input id="li-name" class="form-input" type="text" placeholder="Your username" autocomplete="username" spellcheck="false" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="li-pass">Password</label>
+          <input id="li-pass" class="form-input" type="password" placeholder="Your password" autocomplete="current-password" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="li-server">Server URL</label>
+          <div class="server-row">
+            <input id="li-server" class="form-input" type="text" placeholder="ws://yourserver:3000/ws" autocomplete="url" />
+            <button class="clear-btn" title="Clear saved server" onclick="clearSaved()">✕</button>
+          </div>
+          <span class="form-hint">WebSocket address of your Nexus server</span>
+        </div>
+        <div id="li-error" class="auth-error"></div>
+        <button id="li-btn" class="btn-primary" onclick="doLogin()">Sign In</button>
+      </div>
+
+      <!-- CREATE ACCOUNT -->
+      <div id="form-register" hidden style="display:flex;flex-direction:column;gap:14px;">
+        <div class="form-group">
+          <span class="form-label">Avatar</span>
+          <div class="avatar-row">
+            <div id="emoji-preview" class="avatar-big" onclick="toggleEmojiGrid()">🧑</div>
+            <span class="form-hint">Click your avatar to change it</span>
+          </div>
+          <div class="emoji-grid-wrap" id="emoji-grid"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="rg-name">Username</label>
+          <input id="rg-name" class="form-input" type="text" placeholder="Choose a username" autocomplete="username" spellcheck="false" maxlength="32" />
+          <span class="form-hint">2–32 characters. Letters, numbers, spaces, _ or -</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="rg-pass">Password</label>
+          <input id="rg-pass" class="form-input" type="password" placeholder="Choose a password (min 4 chars)" autocomplete="new-password" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="rg-pass2">Confirm Password</label>
+          <input id="rg-pass2" class="form-input" type="password" placeholder="Repeat your password" autocomplete="new-password" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="rg-server">Server URL</label>
+          <div class="server-row">
+            <input id="rg-server" class="form-input" type="text" placeholder="ws://yourserver:3000/ws" autocomplete="url" />
+            <button class="clear-btn" title="Clear saved server" onclick="clearSaved()">✕</button>
+          </div>
+          <span class="form-hint">WebSocket address of your Nexus server</span>
+        </div>
+        <div id="rg-error" class="auth-error"></div>
+        <button id="rg-btn" class="btn-primary" onclick="doRegister()">Create Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ MAIN SCREEN ═══ -->
+  <div id="screen-main" hidden>
+    <!-- Mobile sidebar overlay (tap to close) -->
+    <div id="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+    <!-- Swipe hint bar on left edge -->
+    <div id="swipe-hint"></div>
+
+    <nav id="sidebar-left">
+      <div class="server-header"><span>Nexus</span><span>⌄</span></div>
+      <div id="channels-scroll">
+        <div class="category-header">
+          <span>Text Channels</span>
+          <span class="cat-add" onclick="openCreateChannel('text')" title="Create text channel">＋</span>
+        </div>
+        <div id="text-channel-list"></div>
+        <div class="category-header">
+          <span>Voice Channels</span>
+          <span class="cat-add" onclick="openCreateChannel('voice')" title="Create voice channel">＋</span>
+        </div>
+        <div id="voice-channel-list"></div>
+      </div>
+
+      <div id="vc-status-bar" hidden>
+        <div class="vc-sb-connected">🟢 Voice Connected</div>
+        <div class="vc-sb-channel" id="vc-sb-channel-name"></div>
+        <div class="vc-sb-user">
+          <span id="vsb-avatar" style="font-size:18px;">🧑</span>
+          <span class="vsb-name" id="vsb-name">—</span>
+          <span id="vsb-muted-icon" style="font-size:12px;color:var(--danger);" hidden>🔇</span>
+        </div>
+        <button class="vc-leave-btn" onclick="leaveVoiceChannel()">📵 Disconnect</button>
+      </div>
+
+      <div id="user-bar">
+        <div class="ub-avatar" id="ub-avatar">🧑</div>
+        <div class="ub-info">
+          <div class="ub-name" id="ub-name">—</div>
+          <div class="ub-tag">
+            <span class="conn-dot offline" id="conn-dot"></span>
+            <span id="conn-label">Offline</span>
+          </div>
+        </div>
+        <div class="ub-controls">
+          <button class="ub-btn active-muted" id="mic-btn"    onclick="toggleMute()"    title="Toggle Mute (M)">🔇</button>
+          <button class="ub-btn"              id="deafen-btn" onclick="toggleDeafen()"  title="Toggle Deafen">🔊</button>
+          <button class="ub-btn"                             onclick="openSettings()"   title="Settings">⚙️</button>
+        </div>
+      </div>
+    </nav>
+
+    <main id="main-panel">
+      <div id="channel-header">
+        <span class="hdr-icon" id="hdr-icon">#</span>
+        <span class="hdr-name" id="hdr-name">general</span>
+        <div class="hdr-divider"></div>
+        <span class="hdr-topic" id="hdr-topic">Welcome to Nexus!</span>
+        <div class="hdr-actions">
+          <button class="hdr-btn active" id="members-btn" onclick="toggleMembers()" title="Toggle Members">👥</button>
+          <button class="hdr-btn"                         onclick="toggleDMPanel()" title="Direct Messages">💬</button>
+          <button class="hdr-btn"                         onclick="notify('Search coming soon!','info')" title="Search">🔍</button>
+        </div>
+      </div>
+
+      <div id="vc-view" hidden>
+        <div class="vc-hero">
+          <span class="vc-hero-icon">🔊</span>
+          <h2 id="vc-hero-name">General</h2>
+          <p id="vc-hero-desc">No one is here yet.</p>
+          <button class="vc-join-btn" id="vc-join-btn" onclick="toggleVoiceJoin()">Join Voice Channel</button>
+        </div>
+        <div id="vc-participants-grid"></div>
+      </div>
+
+      <div id="chat-view">
+        <div id="messages-scroll">
+          <div id="messages-list">
+            <div class="chan-welcome" id="chan-welcome">
+              <span class="cw-icon">#</span>
+              <h2>Welcome to #general!</h2>
+              <p>This is the start of the #general channel.</p>
+            </div>
+          </div>
+        </div>
+        <div id="typing-bar"></div>
+        <div id="input-area">
+          <div id="nexus-attach-preview" style="display:none;padding:6px 12px 0;display:none;align-items:center;gap:8px;">
+            <img id="nexus-attach-img" style="height:48px;width:48px;object-fit:cover;border-radius:6px;border:1px solid var(--bg-active);" />
+            <span id="nexus-attach-name" style="font-size:12px;color:var(--text-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+            <button onclick="cancelNexusAttach()" style="background:transparent;border:none;color:var(--danger);cursor:pointer;font-size:16px;padding:2px 6px;">✕</button>
+          </div>
+          <div id="reply-preview">
+            <span style="font-size:16px;">↩️</span>
+            <span id="reply-preview-text">Replying to <b></b></span>
+            <button id="reply-cancel" onclick="cancelReply()">✕</button>
+          </div>
+          <div class="msg-input-box" style="position:relative;">
+            <div id="nexus-emoji-wrap"></div>
+            <input type="file" id="nexus-file-input" accept="image/*" hidden />
+            <button class="mib-btn" id="nexus-attach-btn" onclick="document.getElementById('nexus-file-input').click()" title="Attach image">📎</button>
+            <textarea id="message-input" placeholder="Message #general" rows="1"></textarea>
+            <button class="mib-btn" id="nexus-emoji-btn" onclick="toggleNexusEmojiPicker()" title="Emoji">😊</button>
+            <button class="mib-btn mib-send" onclick="sendMessage()">➤</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <aside id="sidebar-right">
+      <div class="members-label" id="online-label">ONLINE — 0</div>
+      <div id="online-members"></div>
+    </aside>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-bg" id="modal-settings" hidden onclick="if(event.target===this)closeSettings()">
+  <div class="modal-card">
+    <h2>⚙️ Settings</h2>
+    <div class="settings-sec">
+      <h3>Microphone</h3>
+      <select id="mic-select"><option>Loading…</option></select>
+      <canvas id="waveform" width="400" height="36"></canvas>
+    </div>
+    <div class="settings-sec">
+      <h3>Master Volume</h3>
+      <div class="vol-row">
+        <label>🔊</label>
+        <input type="range" id="master-vol" min="0" max="200" value="100" />
+        <span class="vol-val" id="vol-label">100%</span>
+      </div>
+    </div>
+    <div class="settings-sec">
+      <h3>Theme</h3>
+      <div class="theme-picker">
+        <div class="theme-dot active" title="Dark"  style="background:#313338;"                onclick="setTheme('')"></div>
+        <div class="theme-dot"        title="Light" style="background:#f2f3f5;border-color:#ccc;" onclick="setTheme('light')"></div>
+        <div class="theme-dot"        title="AMOLED"style="background:#000;"                  onclick="setTheme('amoled')"></div>
+        <div class="theme-dot"        title="Green" style="background:#1a2b1a;"               onclick="setTheme('green')"></div>
+      </div>
+    </div>
+    <div class="settings-sec">
+      <h3>Connection</h3>
+      <div class="conn-badge">
+        <span class="conn-dot offline" id="s-conn-dot"></span>
+        <span id="s-conn-label">Offline</span>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeSettings()">Close</button>
+      <button class="btn-solid" style="background:var(--danger);" onclick="signOut()">Sign Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE CHANNEL MODAL -->
+<div class="modal-bg" id="modal-create-channel" hidden onclick="if(event.target===this)closeCreateChannel()">
+  <div class="modal-card">
+    <h2 id="cc-title">➕ Create Text Channel</h2>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label class="modal-label" for="cc-name">Channel Name</label>
+        <input id="cc-name" class="modal-input" type="text" placeholder="e.g. gaming-chat" maxlength="32" autocomplete="off" spellcheck="false" />
+        <div style="font-size:12px;color:var(--text-muted);margin-top:5px;">Letters, numbers, hyphens and underscores only.</div>
+      </div>
+      <div>
+        <label class="modal-label" for="cc-pass">Password <span style="font-weight:400;text-transform:none;letter-spacing:0;">(leave blank for public)</span></label>
+        <input id="cc-pass" class="modal-input" type="password" placeholder="Optional password to restrict access" />
+      </div>
+      <div id="cc-error" style="color:var(--danger);font-size:13px;min-height:16px;"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeCreateChannel()">Cancel</button>
+      <button class="btn-solid" onclick="submitCreateChannel()">Create Channel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANNEL PASSWORD MODAL -->
+<div class="modal-bg" id="modal-channel-pass" hidden onclick="if(event.target===this)closeChannelPass()">
+  <div class="modal-card">
+    <h2>🔒 <span id="cp-title">Locked Channel</span></h2>
+    <p style="font-size:14px;color:var(--text-muted);">This channel is password protected. Enter the password to join.</p>
+    <div>
+      <label class="modal-label" for="cp-pass">Password</label>
+      <input id="cp-pass" class="modal-input" type="password" placeholder="Enter channel password" autocomplete="off" />
+    </div>
+    <div id="cp-error" style="color:var(--danger);font-size:13px;min-height:16px;"></div>
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeChannelPass()">Cancel</button>
+      <button class="btn-solid" id="cp-submit" onclick="submitChannelPass()">Join</button>
+    </div>
+  </div>
+</div>
+<div id="audio-sinks" style="display:none;"></div>
+
+<script>
+"use strict";
+
+/* ══ Config ══════════════════════════════════════════════════════════════════ */
+const RECONNECT_DELAY  = 3000;
+const PING_INTERVAL    = 15000;
+const MSG_GROUP_WINDOW = 5 * 60 * 1000;
+const LS_KEY           = "nexus_session"; // stores { name, server } only — never password
+
+const TEXT_CHANNELS = [
+  { id:"general",   name:"general",   topic:"General chat — anything goes" },
+  { id:"off-topic", name:"off-topic", topic:"Random stuff, memes, and fun" },
+  { id:"help",      name:"help",      topic:"Ask for help with anything"    },
+  { id:"media",     name:"media",     topic:"Share music, videos, and links"},
+];
+const VOICE_CHANNELS = [
+  { id:"vc-general", name:"General" },
+  { id:"vc-gaming",  name:"Gaming"  },
+  { id:"vc-study",   name:"Study"   },
+  { id:"vc-private", name:"Private" },
+];
+
+/* ══ State ═══════════════════════════════════════════════════════════════════ */
+let ws=null, localStream=null, audioCtx=null, analyser=null, masterGain=null;
+let muted=true, deafened=false;
+let myName="", myEmoji="🧑", serverUrl="", hostName="";
+let registeredUsers = []; // all accounts on the server
+let shouldReconnect=true, reconnectTimer=null, pingTimer=null, authReady=false;
+let myGroup="global", joinedVoiceChannel=null, viewingVC=null;
+let activeTextChannel="general", isViewingVoice=false, pttActive=false;
+let lastTypingSent=0;
+
+// Dynamic custom channels (received from server)
+let customTextChannels  = [];   // [{ id, name, topic, hasPassword }]
+let customVoiceChannels = [];   // [{ id, name, hasPassword }]
+
+// Channels this session has unlocked with a password (key = channel id)
+const unlockedChannels = new Set();
+
+// Pending channel password check
+let pendingChannelJoin = null; // { id, type:'text'|'voice' }
+
+const playerList   = new Map();
+const peers        = new Map();
+const peerPubKeys  = new Map(); // name → CryptoKey (their ECDH public key)
+const typingMap    = new Map();
+const unreadCounts = new Map();
+const chatMessages = new Map();
+TEXT_CHANNELS.forEach(ch => { chatMessages.set(ch.id, []); unreadCounts.set(ch.id, 0); });
+
+// E2E — ECDH P-256 + AES-GCM. Private key stays in memory only, never sent anywhere.
+let myKeyPair   = null;  // CryptoKeyPair
+let myPubKeyB64 = null;  // base64 exported SPKI public key
+
+/* ══ Local storage helpers ═══════════════════════════════════════════════════ */
+function loadSession() { try { return JSON.parse(localStorage.getItem(LS_KEY)||"null"); } catch { return null; } }
+function saveSession(name, server) { localStorage.setItem(LS_KEY, JSON.stringify({ name, server })); }
+function clearSaved() {
+  localStorage.removeItem(LS_KEY);
+  document.getElementById("li-server").value="";
+  document.getElementById("rg-server").value="";
+  notify("Saved server cleared","info",2000);
+}
+
+/* ══ Pre-fill saved session ══════════════════════════════════════════════════ */
+(function prefill() {
+  const s = loadSession();
+  if (!s) return;
+  if (s.name)   document.getElementById("li-name").value   = s.name;
+  if (s.server) { document.getElementById("li-server").value=s.server; document.getElementById("rg-server").value=s.server; }
+})();
+
+/* ══ Tab switcher ════════════════════════════════════════════════════════════ */
+function switchTab(tab) {
+  const isLogin = tab==="login";
+  document.getElementById("tab-login").classList.toggle("active",isLogin);
+  document.getElementById("tab-register").classList.toggle("active",!isLogin);
+  document.getElementById("form-login").hidden    = !isLogin;
+  document.getElementById("form-register").hidden =  isLogin;
+  document.getElementById("li-error").textContent = "";
+  document.getElementById("rg-error").textContent = "";
+}
+
+/* ══ Emoji picker ════════════════════════════════════════════════════════════ */
+const EMOJI_LIST=["🧑","👷","🧝","🧙","🧛","🧟","🐱","🦊","🐸","🐼","🐺","🦁","🐯","🐻","🐧","🦄","🐨","🐵","🦋","🐙","🐝","🦅","🐬","🦖","🌵","⚡","🔥","🌊","🎮","👾","🤖","💀","🎯","🚀","🌙","⭐","🍄","🎸","🏆","💎","🗡","🛡","🧨","🎭","🐲","🦝","🦜","🦩","🐉"];
+function defaultEmoji(name){let h=0;for(const c of name)h=(h*31+c.charCodeAt(0))&0xffffffff;return EMOJI_LIST[Math.abs(h)%EMOJI_LIST.length];}
+function getEmoji(name){if(name===myName)return myEmoji;return playerList.get(name)?.emoji||defaultEmoji(name);}
+(function buildEmojiGrid(){
+  const grid=document.getElementById("emoji-grid");
+  EMOJI_LIST.forEach((em,i)=>{
+    const span=document.createElement("span");
+    span.textContent=em;
+    if(i===0)span.classList.add("selected");
+    span.addEventListener("click",()=>{
+      document.getElementById("emoji-preview").textContent=em;
+      grid.querySelectorAll("span").forEach(s=>s.classList.remove("selected"));
+      span.classList.add("selected");
+      grid.classList.remove("open");
+    });
+    grid.appendChild(span);
+  });
+})();
+function toggleEmojiGrid(){document.getElementById("emoji-grid").classList.toggle("open");}
+
+/* ══ Utils ═══════════════════════════════════════════════════════════════════ */
+function notify(msg,type="info",ms=4000){const c=document.getElementById("notifications");if(!c)return;const el=Object.assign(document.createElement("div"),{className:`notif ${type}`,textContent:msg});c.prepend(el);setTimeout(()=>el.remove(),ms);}
+function emit(obj){if(ws?.readyState===WebSocket.OPEN)ws.send(JSON.stringify(obj));}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function timeStr(ts){const d=new Date(ts);let h=d.getHours(),m=d.getMinutes(),a=h>=12?"PM":"AM";h=h%12||12;return`${h}:${String(m).padStart(2,"0")} ${a}`;}
+function dateLabel(ts){const d=new Date(ts),t=new Date();if(d.toDateString()===t.toDateString())return"Today";const y=new Date(t);y.setDate(t.getDate()-1);if(d.toDateString()===y.toDateString())return"Yesterday";return d.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});}
+function formatMsg(text){return esc(text).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\*(.+?)\*/g,"<em>$1</em>").replace(/`(.+?)`/g,"<code style='background:var(--bg-input);padding:0 3px;border-radius:3px;font-family:monospace;font-size:13px;'>$1</code>").replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--accent-l);text-decoration:none;">$1</a>');}
+function autoResize(el){el.style.height="auto";el.style.height=Math.min(el.scrollHeight,200)+"px";}
+function scrollBottom(){const el=document.getElementById("messages-scroll");if(el)el.scrollTop=el.scrollHeight;}
+
+/* ══ Validation ══════════════════════════════════════════════════════════════ */
+function validateName(n){if(!n)return"Username is required.";if(n.length<2)return"Minimum 2 characters.";if(n.length>32)return"Maximum 32 characters.";if(!/^[a-zA-Z0-9_\- ]+$/.test(n))return"Letters, numbers, spaces, - and _ only.";return null;}
+
+/* ══ Login ═══════════════════════════════════════════════════════════════════ */
+async function doLogin(){
+  const btn=document.getElementById("li-btn");
+  const errEl=document.getElementById("li-error");
+  const name=document.getElementById("li-name").value.trim();
+  const pass=document.getElementById("li-pass").value;
+  const server=document.getElementById("li-server").value.trim();
+  errEl.textContent="";
+  const ne=validateName(name);
+  if(ne){errEl.textContent=ne;return;}
+  if(!pass){errEl.textContent="Password is required.";return;}
+  if(!server){errEl.textContent="Server URL is required.";return;}
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Signing in…';
+  myName=name;myEmoji=defaultEmoji(name);serverUrl=server;shouldReconnect=true;
+  try{openWs("login",{name,password:pass});}catch(e){errEl.textContent=e.message;btn.disabled=false;btn.textContent="Sign In";}
+}
+
+/* ══ Register ════════════════════════════════════════════════════════════════ */
+async function doRegister(){
+  const btn=document.getElementById("rg-btn");
+  const errEl=document.getElementById("rg-error");
+  const emoji=document.getElementById("emoji-preview").textContent;
+  const name=document.getElementById("rg-name").value.trim();
+  const pass=document.getElementById("rg-pass").value;
+  const pass2=document.getElementById("rg-pass2").value;
+  const server=document.getElementById("rg-server").value.trim();
+  errEl.textContent="";
+  const ne=validateName(name);
+  if(ne){errEl.textContent=ne;return;}
+  if(!pass){errEl.textContent="Password is required.";return;}
+  if(pass.length<4){errEl.textContent="Password must be at least 4 characters.";return;}
+  if(pass!==pass2){errEl.textContent="Passwords do not match.";return;}
+  if(!server){errEl.textContent="Server URL is required.";return;}
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Creating account…';
+  myName=name;myEmoji=emoji;serverUrl=server;shouldReconnect=true;
+  try{openWs("register",{name,password:pass,emoji});}catch(e){errEl.textContent=e.message;btn.disabled=false;btn.textContent="Create Account";}
+}
+
+/* ══ Open WebSocket and send initial auth message ════════════════════════════ */
+function openWs(action, payload){
+  const url=serverUrl.startsWith("ws://")&&location.protocol==="https:"?serverUrl.replace("ws://","wss://"):serverUrl;
+  if(ws){try{ws.close();}catch{}ws=null;}
+  ws=new WebSocket(url);
+  const onOpen=()=>{ ws.removeEventListener("open",onOpen); emit({type:action,...payload}); };
+  ws.addEventListener("open",onOpen);
+  ws.addEventListener("error",()=>{resetBtns();const errEl=document.getElementById("li-error");errEl.textContent="Could not reach server. Check the URL.";});
+  ws.addEventListener("message",ev=>{let d;try{d=JSON.parse(ev.data);}catch{return;}handleMsg(d);});
+  ws.addEventListener("close",()=>{
+    clearInterval(pingTimer);
+    if(!shouldReconnect)return;
+    if(authReady){setConnState("reconnecting");notify("Disconnected. Reconnecting…","error");reconnectTimer=setTimeout(()=>doReconnect(),RECONNECT_DELAY);}
+    else{resetBtns();}
+  });
+}
+
+function doReconnect(){
+  if(!shouldReconnect||!myName||!serverUrl)return;
+  const url=serverUrl.startsWith("ws://")&&location.protocol==="https:"?serverUrl.replace("ws://","wss://"):serverUrl;
+  ws=new WebSocket(url);
+  ws.addEventListener("open",()=>{setConnState("connected");/* server will prompt re-auth */});
+  ws.addEventListener("message",ev=>{let d;try{d=JSON.parse(ev.data);}catch{return;}handleMsg(d);});
+  ws.addEventListener("close",()=>{clearInterval(pingTimer);if(!shouldReconnect)return;if(authReady){setConnState("reconnecting");reconnectTimer=setTimeout(()=>doReconnect(),RECONNECT_DELAY);}else{returnToLogin("Session expired. Please sign in again.");}});
+  ws.addEventListener("error",()=>{});
+}
+
+function resetBtns(){
+  const lb=document.getElementById("li-btn");const rb=document.getElementById("rg-btn");
+  if(lb){lb.disabled=false;lb.textContent="Sign In";}
+  if(rb){rb.disabled=false;rb.textContent="Create Account";}
+}
+
+/* ══ Message handler ═════════════════════════════════════════════════════════ */
+function handleMsg(d){
+  switch(d.type){
+    case "auth-ok":         onAuthOk(d);          break;
+    case "auth-fail":       onAuthFail(d.reason);  break;
+    case "banned":          showBanScreen(d);      break;
+    case "player-list":     syncPlayers(d.players);break;
+    case "player-joined":   onPlayerJoined(d.playerName,d.emoji);break;
+    case "player-left":     onPlayerLeft(d.playerName);break;
+    case "group-joined":    myGroup=d.group;       break;
+    case "group-error":     notify(d.msg,"error"); break;
+    case "chat-message":    isDMChannel(d.channel)?handleDMMsg(d):onChatMessage(d); break;
+    case "chat-history":    onChatHistory(d.channels);break;
+    case "typing":          onTyping(d.from,d.channel);break;
+    case "typing-stop":     onTypingStop(d.from);  break;
+    case "floor-mute":      handleFloorMute(d.active);break;
+    case "ptt-command":     d.active?setMuted(false):setMuted(true);break;
+    case "kicked":          handleKicked(d.reason);break;
+    case "pubkey-update":   storePeerPubKey(d.name, d.pubkey); break;
+    case "channel-list":    onChannelList(d.textChannels,d.voiceChannels);break;
+    case "channel-created": onChannelCreated(d.channel,d.kind);break;
+    case "channel-deleted": onChannelDeleted(d.channelId,d.kind);break;
+    case "channel-access-ok":   onChannelAccessOk(d.channelId,d.kind);break;
+    case "channel-access-denied": onChannelAccessDenied(d.reason);break;
+    case "offer":           handleOffer(d.fromId,d.sdp,d.sdpType).catch(console.error);break;
+    case "answer":          handleAnswer(d.fromId,d.sdp,d.sdpType).catch(console.error);break;
+    case "ice-candidate":   handleIce(d.fromId,d.candidate).catch(console.error);break;
+    case "dm":              handleDMMsg(d); break;
+    case "dm-vc-invite":    handleDMMsg(d); break;
+    case "user-list":       registeredUsers=d.users||[]; break;
+  }
+}
+
+/* ══ Auth OK ═════════════════════════════════════════════════════════════════ */
+function onAuthOk(d){
+  authReady=true;
+  if(d.emoji)myEmoji=d.emoji;
+  if(d.registeredUsers) registeredUsers = d.registeredUsers;
+  saveSession(myName,serverUrl);
+  clearInterval(pingTimer);
+  pingTimer=setInterval(()=>emit({type:"ping"}),PING_INTERVAL);
+  document.getElementById("screen-connect").hidden=true;
+  document.getElementById("screen-main").hidden=false;
+  document.getElementById("ub-name").textContent=myName;
+  document.getElementById("ub-avatar").textContent=myEmoji;
+  setConnState("connected");
+  resetBtns();
+  buildSidebar();
+  switchTextChannel("general");
+  emit({type:"get-channel-list"});
+  emit({type:"get-users"}); // fetch all registered users for DM picker
+  initE2E();                        // generate ECDH key pair for E2E encryption
+  notify(`Welcome, ${myName}!`,"success");
+  setTimeout(()=>{startSilentAudio();requestWakeLock();startKeepAlive();},400);
+}
+
+/* ══ Ban screen ══════════════════════════════════════════════════════════════ */
+function showBanScreen(d) {
+  shouldReconnect = false;
+  if (ws) { try { ws.close(); } catch {} ws = null; }
+  resetBtns();
+  document.getElementById("screen-banned").hidden = false;
+  document.getElementById("screen-connect").hidden = true;
+  document.getElementById("screen-main").hidden   = true;
+  document.getElementById("ban-reason-text").textContent = d.reason || "Violation of community guidelines.";
+  document.getElementById("ban-date-text").textContent   = d.bannedAt
+    ? new Date(d.bannedAt).toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" })
+    : new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+}
+function onAuthFail(reason){
+  shouldReconnect=false;
+  if(ws){try{ws.close();}catch{}ws=null;}
+  resetBtns();
+  // Show error on the currently active tab
+  const activeForm=document.getElementById("form-login").hidden?"rg":"li";
+  document.getElementById(`${activeForm}-error`).textContent=reason||"Incorrect username or password.";
+}
+
+/* ══ Return to login ═════════════════════════════════════════════════════════ */
+function returnToLogin(msg){
+  authReady=false;shouldReconnect=false;
+  clearTimeout(reconnectTimer);clearInterval(pingTimer);
+  document.getElementById("screen-connect").hidden=false;
+  document.getElementById("screen-main").hidden=true;
+  if(msg)document.getElementById("li-error").textContent=msg;
+  playerList.clear();typingMap.clear();
+  for(const n of [...peers.keys()])destroyPeer(n);
+  setConnState("offline");
+}
+
+/* ══ Sign out ════════════════════════════════════════════════════════════════ */
+function signOut(){
+  shouldReconnect=false;
+  clearTimeout(reconnectTimer);clearInterval(pingTimer);
+  if(joinedVoiceChannel)leaveVoiceChannel(false);
+  for(const n of [...peers.keys()])destroyPeer(n);
+  if(ws){try{ws.close();}catch{}ws=null;}
+  localStream?.getTracks().forEach(t=>t.stop());localStream=null;
+  closeSettings();
+  TEXT_CHANNELS.forEach(ch=>chatMessages.set(ch.id,[]));
+  customTextChannels.forEach(ch=>chatMessages.delete(ch.id));
+  customVoiceChannels=[]; customTextChannels=[];
+  unlockedChannels.clear(); pendingChannelJoin=null;
+  typingMap.clear();playerList.clear();
+  authReady=false;joinedVoiceChannel=null;
+  returnToLogin("");
+  notify("Signed out","info");
+}
+
+/* ══ Sidebar ═════════════════════════════════════════════════════════════════ */
+function buildSidebar(){
+  // ── Text channels ──────────────────────────────
+  const tl=document.getElementById("text-channel-list");
+  tl.innerHTML="";
+  const allText=[...TEXT_CHANNELS,...customTextChannels];
+  allText.forEach(ch=>{
+    const unread=unreadCounts.get(ch.id)||0;
+    const locked=ch.hasPassword&&!unlockedChannels.has(ch.id);
+    const el=document.createElement("div");
+    el.className=`channel-item${!isViewingVoice&&activeTextChannel===ch.id?" active":""}`;
+    el.innerHTML=`
+      <span style="font-size:16px;color:var(--text-dimmed);font-weight:700;flex-shrink:0;">${locked?"🔒":"#"}</span>
+      <span class="ch-name">${esc(ch.name)}</span>
+      ${unread>0?`<span class="ch-unread">${unread>99?"99+":unread}</span>`:""}
+    `;
+    el.onclick=()=>tryOpenTextChannel(ch.id);
+    tl.appendChild(el);
+  });
+
+  // ── Voice channels ─────────────────────────────
+  const vl=document.getElementById("voice-channel-list");
+  vl.innerHTML="";
+  const allVoice=[...VOICE_CHANNELS,...customVoiceChannels];
+  allVoice.forEach(vc=>{
+    const isJoined=joinedVoiceChannel===vc.id;
+    const isViewing=isViewingVoice&&viewingVC===vc.id;
+    const locked=vc.hasPassword&&!unlockedChannels.has(vc.id);
+    const el=document.createElement("div");
+    el.className=`channel-item${isViewing?" active":""}`;
+    el.innerHTML=`
+      <span style="font-size:16px;flex-shrink:0;">${locked?"🔒":"🔊"}</span>
+      <span class="ch-name">${esc(vc.name)}${isJoined?` <span style="color:var(--online);font-size:11px;">●</span>`:""}</span>
+    `;
+    el.onclick=()=>tryOpenVoiceChannel(vc.id);
+    vl.appendChild(el);
+    const members=[...playerList.values()].filter(p=>p.group===vc.id);
+    if(members.length){
+      const pWrap=document.createElement("div");pWrap.className="vc-members-list";
+      members.forEach(p=>{
+        const row=document.createElement("div");
+        const speaking=(peers.get(p.name)?.volumeLevel??0)>0.05;
+        row.className=`vc-member-row${speaking?" speaking":""}`;
+        row.innerHTML=`<span class="vcm-avatar">${esc(getEmoji(p.name))}</span><span class="vcm-name">${esc(p.name)}${p.name===myName?" (you)":""}</span>`;
+        pWrap.appendChild(row);
+      });
+      vl.appendChild(pWrap);
+    }
+  });
+}
+
+/* ══ Password-gate helpers ═══════════════════════════════════════════════════ */
+function getAllTextChannels(){ return [...TEXT_CHANNELS,...customTextChannels]; }
+function getAllVoiceChannels(){ return [...VOICE_CHANNELS,...customVoiceChannels]; }
+
+function tryOpenTextChannel(id){
+  const ch=getAllTextChannels().find(c=>c.id===id);
+  if(!ch)return;
+  if(ch.hasPassword&&!unlockedChannels.has(id)){
+    pendingChannelJoin={id,type:"text"};
+    openChannelPass(ch.name);
+  } else {
+    switchTextChannel(id);
+  }
+}
+
+function tryOpenVoiceChannel(id){
+  const vc=getAllVoiceChannels().find(v=>v.id===id);
+  if(!vc)return;
+  if(vc.hasPassword&&!unlockedChannels.has(id)){
+    pendingChannelJoin={id,type:"voice"};
+    openChannelPass(vc.name);
+  } else {
+    switchVoiceView(id);
+  }
+}
+
+/* ══ Text channel switch ═════════════════════════════════════════════════════ */
+function switchTextChannel(id){
+  activeTextChannel=id;isViewingVoice=false;viewingVC=null;
+  unreadCounts.set(id,0);
+  const ch=getAllTextChannels().find(c=>c.id===id);
+  if(!ch)return;
+  document.getElementById("hdr-icon").textContent="#";
+  document.getElementById("hdr-name").textContent=ch.name;
+  document.getElementById("hdr-topic").textContent=ch.topic||`#${ch.name} channel`;
+  document.getElementById("message-input").placeholder=`Message #${ch.name}  •  🔒 #username msg for private E2E`;
+  document.getElementById("vc-view").hidden=true;
+  document.getElementById("chat-view").hidden=false;
+  document.getElementById("chan-welcome").innerHTML=`<span class="cw-icon">#</span><h2>Welcome to #${esc(ch.name)}!</h2><p>${esc(ch.topic||`This is the start of #${ch.name}.`)}</p>`;
+  if(!chatMessages.has(id)){chatMessages.set(id,[]);unreadCounts.set(id,0);}
+  renderMessages(id);buildSidebar();updateTypingBar();
+}
+
+/* ══ Voice channel switch ════════════════════════════════════════════════════ */
+function switchVoiceView(vcId){
+  isViewingVoice=true;viewingVC=vcId;
+  const vc=getAllVoiceChannels().find(v=>v.id===vcId);
+  if(!vc)return;
+  document.getElementById("hdr-icon").textContent="🔊";
+  document.getElementById("hdr-name").textContent=vc.name;
+  document.getElementById("hdr-topic").textContent="Voice Channel";
+  document.getElementById("chat-view").hidden=true;
+  document.getElementById("vc-view").hidden=false;
+  refreshVoiceView();buildSidebar();
+}
+
+function refreshVoiceView(){
+  if(!viewingVC)return;
+  const vc=getAllVoiceChannels().find(v=>v.id===viewingVC);
+  if(!vc)return;
+  const isJoined=joinedVoiceChannel===viewingVC;
+  document.getElementById("vc-hero-name").textContent=vc.name;
+  document.getElementById("vc-hero-desc").textContent=isJoined?"You are connected. Hold M to speak.":"Click below to join this voice channel.";
+  const btn=document.getElementById("vc-join-btn");
+  btn.textContent=isJoined?"Disconnect from Voice":"Join Voice Channel";
+  btn.className=`vc-join-btn${isJoined?" leave":""}`;
+  renderVcCards();
+}
+
+function toggleVoiceJoin(){
+  if(joinedVoiceChannel===viewingVC){ leaveVoiceChannel(); return; }
+  // If locked and not yet unlocked, ask for password first
+  const vc=getAllVoiceChannels().find(v=>v.id===viewingVC);
+  if(vc?.hasPassword && !unlockedChannels.has(viewingVC)){
+    pendingChannelJoin={id:viewingVC, type:"voice", action:"join"};
+    openChannelPass(vc.name);
+  } else {
+    joinVoiceChannel(viewingVC);
+  }
+}
+
+async function joinVoiceChannel(vcId){
+  // Request mic the first time someone joins a VC — not at login
+  if(!localStream){
+    try {
+      await initAudio();
+    } catch {
+      notify("Microphone access is required to join a voice channel — please allow it and try again.","error",5000);
+      return;
+    }
+  }
+  if(joinedVoiceChannel)leaveVoiceChannel(false);
+  joinedVoiceChannel=vcId;myGroup=vcId;
+  const vc=getAllVoiceChannels().find(v=>v.id===vcId);
+  const pass=unlockedChannels.has(vcId)?sessionStorage.getItem(`ch_pass_${vcId}`)||null:null;
+  emit({type:"create-group",groupName:vcId,password:pass});
+  setTimeout(()=>emit({type:"join-group",groupName:vcId,password:pass}),80);
+  document.getElementById("vc-status-bar").hidden=false;
+  document.getElementById("vc-sb-channel-name").textContent=vc?.name||vcId;
+  document.getElementById("vsb-avatar").textContent=myEmoji;
+  document.getElementById("vsb-name").textContent=myName;
+  setMuted(true);
+  postSystemMsg("general",`🔊 **${myName}** joined voice channel **${vc?.name||vcId}**`);
+  notify(`Joined ${vc?.name||vcId} — hold M to speak`,"success");
+  if(audioCtx?.state==="suspended") audioCtx.resume();
+  startSilentAudio();
+  startKeepAlive();
+  requestWakeLock();
+  updateMediaSession();
+  // Only show call overlay for private DM voice calls
+  if(vcId.startsWith("dvc_")) showCallOverlay(vc?.name||vcId);
+  refreshVoiceView();buildSidebar();renderMembers();
+}
+
+function leaveVoiceChannel(switchToText=true){
+  if(!joinedVoiceChannel)return;
+  const vc=getAllVoiceChannels().find(v=>v.id===joinedVoiceChannel);
+  emit({type:"leave-group"});
+  for(const n of [...peers.keys()])destroyPeer(n);
+  joinedVoiceChannel=null;myGroup="global";
+  document.getElementById("vc-status-bar").hidden=true;
+  hideCallOverlay();
+  updateMediaSession();
+  if(vc){postSystemMsg("general",`👋 **${myName}** left voice channel **${vc.name}**`);notify(`Left ${vc.name}`,"info");}
+  if(switchToText)switchTextChannel(activeTextChannel);
+  else{buildSidebar();renderMembers();}
+}
+
+/* ══ Create Channel Modal ════════════════════════════════════════════════════ */
+let _createChannelKind = "text"; // "text" | "voice"
+
+function openCreateChannel(kind){
+  if(!authReady){notify("Sign in first","error");return;}
+  _createChannelKind=kind;
+  document.getElementById("cc-title").textContent=kind==="text"?"➕ Create Text Channel":"➕ Create Voice Channel";
+  document.getElementById("cc-name").value="";
+  document.getElementById("cc-pass").value="";
+  document.getElementById("cc-error").textContent="";
+  document.getElementById("modal-create-channel").hidden=false;
+  document.getElementById("cc-name").focus();
+}
+
+function closeCreateChannel(){document.getElementById("modal-create-channel").hidden=true;}
+
+function submitCreateChannel(){
+  const rawName=document.getElementById("cc-name").value.trim();
+  const pass=document.getElementById("cc-pass").value;
+  const errEl=document.getElementById("cc-error");
+  errEl.textContent="";
+
+  if(!rawName){errEl.textContent="Channel name is required.";return;}
+  if(!/^[a-zA-Z0-9\-_]{2,32}$/.test(rawName)){
+    errEl.textContent="2–32 characters. Letters, numbers, - and _ only.";return;
+  }
+
+  const id=(_createChannelKind==="voice"?"vc-":"tc-")+rawName.toLowerCase();
+  const allExisting=[...TEXT_CHANNELS,...customTextChannels,...VOICE_CHANNELS,...customVoiceChannels];
+  if(allExisting.find(c=>c.id===id||c.name.toLowerCase()===rawName.toLowerCase())){
+    errEl.textContent="A channel with that name already exists.";return;
+  }
+
+  emit({
+    type:"create-custom-channel",
+    kind:_createChannelKind,
+    channelName:rawName,
+    channelId:id,
+    password:pass||null
+  });
+  closeCreateChannel();
+}
+
+document.getElementById("cc-name").addEventListener("keydown",e=>{if(e.key==="Enter")submitCreateChannel();});
+document.getElementById("cc-pass").addEventListener("keydown",e=>{if(e.key==="Enter")submitCreateChannel();});
+
+/* ══ Channel Password Modal ══════════════════════════════════════════════════ */
+function openChannelPass(name){
+  document.getElementById("cp-title").textContent=`#${name}` ;
+  document.getElementById("cp-pass").value="";
+  document.getElementById("cp-error").textContent="";
+  document.getElementById("modal-channel-pass").hidden=false;
+  document.getElementById("cp-pass").focus();
+}
+
+function closeChannelPass(){
+  document.getElementById("modal-channel-pass").hidden=true;
+  pendingChannelJoin=null;
+}
+
+function submitChannelPass(){
+  if(!pendingChannelJoin)return;
+  const pass=document.getElementById("cp-pass").value;
+  if(!pass){document.getElementById("cp-error").textContent="Password is required.";return;}
+  emit({type:"verify-channel-pass",channelId:pendingChannelJoin.id,kind:pendingChannelJoin.type,password:pass});
+  document.getElementById("cp-submit").disabled=true;
+  document.getElementById("cp-submit").textContent="Checking…";
+}
+
+document.getElementById("cp-pass").addEventListener("keydown",e=>{if(e.key==="Enter")submitChannelPass();});
+
+/* ══ Server channel message handlers ════════════════════════════════════════ */
+function onChannelList(textChans,voiceChans){
+  customTextChannels=(textChans||[]);
+  customVoiceChannels=(voiceChans||[]);
+  customTextChannels.forEach(ch=>{
+    if(!chatMessages.has(ch.id)){chatMessages.set(ch.id,[]);unreadCounts.set(ch.id,0);}
+  });
+  buildSidebar();
+}
+
+function onChannelCreated(channel,kind){
+  if(kind==="text"){
+    if(!customTextChannels.find(c=>c.id===channel.id)){
+      customTextChannels.push(channel);
+      if(!chatMessages.has(channel.id)){chatMessages.set(channel.id,[]);unreadCounts.set(channel.id,0);}
+    }
+  } else {
+    if(!customVoiceChannels.find(c=>c.id===channel.id)){
+      customVoiceChannels.push(channel);
+    }
+  }
+  buildSidebar();
+  notify(`${kind==="text"?"#":"🔊 "}${channel.name} channel created!`,"success");
+}
+
+function onChannelAccessOk(channelId,kind){
+  unlockedChannels.add(channelId);
+  const pass=document.getElementById("cp-pass").value;
+  if(pass) sessionStorage.setItem(`ch_pass_${channelId}`,pass);
+
+  document.getElementById("modal-channel-pass").hidden=true;
+  document.getElementById("cp-submit").disabled=false;
+  document.getElementById("cp-submit").textContent="Join";
+
+  const action = pendingChannelJoin?.action || "view";
+  pendingChannelJoin=null;
+
+  if(kind==="text"){
+    switchTextChannel(channelId);
+  } else {
+    // If they clicked the sidebar item → just view; if they clicked the Join button → actually join
+    if(action==="join"){
+      switchVoiceView(channelId);   // show the VC screen first
+      joinVoiceChannel(channelId);  // then connect
+    } else {
+      switchVoiceView(channelId);
+    }
+  }
+}
+
+function onChannelAccessDenied(reason){
+  document.getElementById("cp-error").textContent=reason||"Wrong password.";
+  document.getElementById("cp-pass").value="";
+  document.getElementById("cp-pass").focus();
+  document.getElementById("cp-submit").disabled=false;
+  document.getElementById("cp-submit").textContent="Join";
+}
+
+function onChannelDeleted(channelId, kind){
+  if(kind==="text"){
+    customTextChannels=customTextChannels.filter(c=>c.id!==channelId);
+    chatMessages.delete(channelId);
+    unreadCounts.delete(channelId);
+    if(activeTextChannel===channelId) switchTextChannel("general");
+  } else {
+    customVoiceChannels=customVoiceChannels.filter(c=>c.id!==channelId);
+    if(joinedVoiceChannel===channelId) leaveVoiceChannel(true);
+    if(viewingVC===channelId){ isViewingVoice=false; viewingVC=null; switchTextChannel(activeTextChannel); }
+  }
+  unlockedChannels.delete(channelId);
+  buildSidebar();
+  notify(`A channel was deleted by the host.`,"info");
+}
+function renderVcCards(){
+  const grid=document.getElementById("vc-participants-grid");
+  grid.innerHTML="";
+  if(!viewingVC)return;
+  if(joinedVoiceChannel===viewingVC){
+    const c=document.createElement("div");c.className="vc-card";c.id="vc-card-ME";
+    c.innerHTML=`<div class="vc-ca">${esc(myEmoji)}</div><div class="vc-cn">${esc(myName)} <span style="font-size:11px;color:var(--accent-l);">(you)</span></div><div class="vol-meter" id="vc-meter-me"><div class="vm-bar b1"></div><div class="vm-bar b2"></div><div class="vm-bar b3"></div><div class="vm-bar b4"></div></div>${muted?'<div class="vc-mm">🔇</div>':""}`;
+    grid.appendChild(c);
+  }
+  [...playerList.values()].filter(p=>p.group===viewingVC&&p.name!==myName).forEach(p=>{
+    const peer=peers.get(p.name);const state=peer?.state??"connecting";const speaking=(peer?.volumeLevel??0)>0.05;
+    const c=document.createElement("div");c.className=`vc-card${speaking?" speaking":""}`;c.id=`vc-card-${CSS.escape(p.name)}`;
+    c.innerHTML=`<div class="vc-ca">${esc(getEmoji(p.name))}</div><div class="vc-cn">${esc(p.name)}</div><div class="vc-cs">${state==="connected"?"🟢 Connected":state==="failed"?"🔴 Failed":"🟡 Connecting…"}</div><div class="vol-meter" id="vbars-${CSS.escape(p.name)}"><div class="vm-bar b1"></div><div class="vm-bar b2"></div><div class="vm-bar b3"></div><div class="vm-bar b4"></div></div>`;
+    grid.appendChild(c);
+  });
+}
+
+/* ══ Chat rendering ══════════════════════════════════════════════════════════ */
+function makeMsgGroup(msg){
+  const el=document.createElement("div");el.className="msg-group";
+  const imgHtml = msg.attachment
+    ? `<img src="data:${msg.attachment.mime_type};base64,${msg.attachment.data}" style="max-width:260px;max-height:200px;border-radius:8px;margin-top:6px;display:block;cursor:pointer;" onclick="window.open(this.src,'_blank')" title="${esc(msg.attachment.name||'image')}" />`
+    : "";
+
+  // E2E styling
+  let textStyle = "";
+  let bubbleStyle = "";
+  if (msg.e2eSent)     { textStyle="color:var(--accent-l);"; bubbleStyle="border-left:3px solid var(--accent);padding-left:8px;"; }
+  if (msg.e2eReceived) { textStyle="color:var(--online);";   bubbleStyle="border-left:3px solid var(--online);padding-left:8px;"; }
+  if (msg.e2eGarbled)  { textStyle="color:var(--text-dimmed);font-family:monospace;font-size:12px;"; bubbleStyle="opacity:0.7;"; }
+
+  el.innerHTML=`<div class="mg-av">${esc(msg.emoji||defaultEmoji(msg.from))}</div><div class="mg-body"><div class="mg-header"><span class="mg-author" style="${msg.from===hostName?"color:var(--warning);":""}">${esc(msg.from)}${msg.from===hostName?" 👑":""}</span><span class="mg-time">${timeStr(msg.timestamp)}</span></div>${msg.replyTo?`<div class="reply-quote" onclick="scrollToMsg('${msg.replyTo.id}')"><b>${esc(msg.replyTo.from)}</b>: ${esc((msg.replyTo.content||'').slice(0,80))}</div>`:""}<div class="mg-text" style="${textStyle}"><div style="${bubbleStyle}">${msg.content?formatMsg(msg.content):""}${imgHtml}</div></div></div><button class="msg-reply-btn" onclick="setReply('${msg.id||msg.timestamp}','${esc(msg.from)}','${esc((msg.content||'').slice(0,60))}')">↩ Reply</button>`;
+  el.dataset.msgId = msg.id||msg.timestamp;
+  return el;
+}
+
+function renderMessages(channelId){
+  const msgs=chatMessages.get(channelId)||[];
+  const list=document.getElementById("messages-list");
+  const welcome=document.getElementById("chan-welcome");
+  list.innerHTML="";list.appendChild(welcome);
+  let lastFrom=null,lastDay=null,lastTs=0;
+  msgs.forEach(msg=>{
+    const day=dateLabel(msg.timestamp);
+    if(day!==lastDay){const div=document.createElement("div");div.className="date-divider";div.textContent=day;list.appendChild(div);lastDay=day;lastFrom=null;}
+    if(msg.system){const el=document.createElement("div");el.className="system-msg";el.innerHTML=`<span class="sys-icon">📢</span><span>${formatMsg(msg.content)}</span>`;list.appendChild(el);lastFrom=null;return;}
+    const same=msg.from===lastFrom&&(msg.timestamp-lastTs)<MSG_GROUP_WINDOW;
+    if(same){const el=document.createElement("div");el.className="msg-cont";el.innerHTML=`<span class="mc-time">${timeStr(msg.timestamp)}</span><span class="mc-text">${formatMsg(msg.content)}</span>`;list.appendChild(el);}
+    else list.appendChild(makeMsgGroup(msg));
+    lastFrom=msg.from;lastTs=msg.timestamp;
+  });
+  scrollBottom();
+}
+
+function appendMessage(channelId,msg){
+  const msgs=chatMessages.get(channelId);if(!msgs)return;
+  msgs.push(msg);if(msgs.length>500)msgs.shift();
+  const isActive=!isViewingVoice&&channelId===activeTextChannel;
+  if(isActive){appendMsgToDOM(msg,msgs);scrollBottom();}
+  else if(!msg.system&&msg.from!==myName){unreadCounts.set(channelId,(unreadCounts.get(channelId)||0)+1);buildSidebar();notify(`#${channelId}: ${msg.from}: ${msg.content.slice(0,60)}`,"info",3000);}
+}
+
+function appendMsgToDOM(msg,allMsgs){
+  const list=document.getElementById("messages-list");
+  const prev=allMsgs[allMsgs.length-2];
+  if(msg.system){const el=document.createElement("div");el.className="system-msg";el.innerHTML=`<span class="sys-icon">📢</span><span>${formatMsg(msg.content)}</span>`;list.appendChild(el);return;}
+  const same=prev&&!prev.system&&prev.from===msg.from&&(msg.timestamp-prev.timestamp)<MSG_GROUP_WINDOW;
+  if(same){
+    const el=document.createElement("div");el.className="msg-cont";
+    const imgHtml = msg.attachment
+      ? `<img src="data:${msg.attachment.mime_type};base64,${msg.attachment.data}" style="max-width:260px;max-height:200px;border-radius:8px;margin-top:4px;display:block;cursor:pointer;" onclick="window.open(this.src,'_blank')" />`
+      : "";
+    el.innerHTML=`<span class="mc-time">${timeStr(msg.timestamp)}</span><span class="mc-text">${msg.content?formatMsg(msg.content):""}${imgHtml}</span>`;
+    list.appendChild(el);
+  }
+  else list.appendChild(makeMsgGroup(msg));
+}
+
+function postSystemMsg(channelId,content){appendMessage(channelId,{system:true,content,timestamp:Date.now()});}
+
+/* ══ Nexus Attach File ═══════════════════════════════════════════════════════ */
+let nexusAttachFile = null;
+
+document.getElementById("nexus-file-input").addEventListener("change", () => {
+  const file = document.getElementById("nexus-file-input").files[0];
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) { notify("Image too large — max 3 MB","error"); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById("nexus-file-input").value = "";
+    nexusAttachFile = { data: e.target.result.split(",")[1], mime_type: file.type, name: file.name };
+    const preview = document.getElementById("nexus-attach-preview");
+    document.getElementById("nexus-attach-img").src  = e.target.result;
+    document.getElementById("nexus-attach-name").textContent = file.name;
+    preview.style.display = "flex";
+  };
+  reader.readAsDataURL(file);
+});
+
+function cancelNexusAttach(){
+  nexusAttachFile = null;
+  document.getElementById("nexus-attach-preview").style.display = "none";
+  document.getElementById("nexus-attach-img").src = "";
+}
+
+/* ══ Nexus Emoji Picker ══════════════════════════════════════════════════════ */
+let nexusEmojiPicker = null;
+
+function toggleNexusEmojiPicker(){
+  const wrap = document.getElementById("nexus-emoji-wrap");
+  // Close if already open
+  if (wrap.style.display === "block") {
+    wrap.style.display = "none";
+    return;
+  }
+  // Build picker once
+  if (!nexusEmojiPicker) {
+    nexusEmojiPicker = new EmojiMart.Picker({
+      theme: "dark",
+      skinTonePosition: "none",
+      previewPosition: "none",
+      onEmojiSelect: (emoji) => {
+        const ta = document.getElementById("message-input");
+        const { selectionStart: s, selectionEnd: e } = ta;
+        ta.setRangeText(emoji.native, s, e, "end");
+        ta.focus();
+        autoResize(ta);
+        wrap.style.display = "none";
+      },
+      onClickOutside: (ev) => {
+        if (ev.target.id === "nexus-emoji-btn") return; // handled by toggle
+        wrap.style.display = "none";
+      },
+    });
+    wrap.appendChild(nexusEmojiPicker);
+  }
+  wrap.style.display = "block";
+}
+
+/* ══ E2E Encryption (ECDH P-256 + AES-GCM) ══════════════════════════════════
+   Syntax: type  #username your private message
+   - Only the named recipient can decrypt it
+   - Everyone else sees the raw ciphertext (looks like random base64)
+   - Server never sees plaintext — only relays the encrypted blob
+   - Private key lives in memory only, never exported or sent
+══════════════════════════════════════════════════════════════════════════════ */
+
+async function initE2E() {
+  try {
+    myKeyPair = await crypto.subtle.generateKey(
+      { name:"ECDH", namedCurve:"P-256" },
+      true,
+      ["deriveKey"]
+    );
+    const exported = await crypto.subtle.exportKey("spki", myKeyPair.publicKey);
+    myPubKeyB64 = btoa(String.fromCharCode(...new Uint8Array(exported)));
+    // Tell server our public key so others can encrypt to us
+    emit({ type:"set-pubkey", pubkey: myPubKeyB64 });
+  } catch(e) {
+    console.warn("[E2E] Key generation failed:", e);
+  }
+}
+
+async function importPeerPubKey(b64) {
+  const raw = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  return await crypto.subtle.importKey(
+    "spki", raw.buffer,
+    { name:"ECDH", namedCurve:"P-256" },
+    false, []
+  );
+}
+
+async function deriveSharedKey(theirCryptoKey) {
+  return await crypto.subtle.deriveKey(
+    { name:"ECDH", public: theirCryptoKey },
+    myKeyPair.privateKey,
+    { name:"AES-GCM", length:256 },
+    false,
+    ["encrypt","decrypt"]
+  );
+}
+
+async function e2eEncrypt(recipientName, plaintext) {
+  const theirKey = peerPubKeys.get(recipientName);
+  if (!theirKey) return null;
+  const sharedKey = await deriveSharedKey(theirKey);
+  const iv        = crypto.getRandomValues(new Uint8Array(12));
+  const ct        = await crypto.subtle.encrypt(
+    { name:"AES-GCM", iv },
+    sharedKey,
+    new TextEncoder().encode(plaintext)
+  );
+  const toB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+  return { ct: toB64(ct), iv: toB64(iv.buffer), senderPub: myPubKeyB64 };
+}
+
+async function e2eDecrypt(senderName, ctB64, ivB64) {
+  try {
+    let theirKey = peerPubKeys.get(senderName);
+    if (!theirKey) return null;
+    const sharedKey  = await deriveSharedKey(theirKey);
+    const ct  = Uint8Array.from(atob(ctB64), c => c.charCodeAt(0));
+    const iv  = Uint8Array.from(atob(ivB64),  c => c.charCodeAt(0));
+    const dec = await crypto.subtle.decrypt({ name:"AES-GCM", iv }, sharedKey, ct);
+    return new TextDecoder().decode(dec);
+  } catch(e) {
+    return null; // wrong key or tampered
+  }
+}
+
+// Store/update a peer's public key
+async function storePeerPubKey(name, b64) {
+  if (!b64 || name === myName) return;
+  try {
+    const key = await importPeerPubKey(b64);
+    peerPubKeys.set(name, key);
+  } catch(e) {
+    console.warn("[E2E] Could not import key for", name, e);
+  }
+}
+
+/* ══ Send message ════════════════════════════════════════════════════════════ */
+async function sendMessage(){
+  const ta=document.getElementById("message-input");
+  const content=ta.value.trim();
+  if((!content && !nexusAttachFile) || isViewingVoice) return;
+
+  // ── E2E private message: starts with #username (matched against online players) ─
+  let e2eTarget = null;
+  let plaintext = null;
+
+  if (content.startsWith("#")) {
+    // Sort by longest name first so "Antonio Galindo" matches before "Antonio"
+    const sorted = [...playerList.keys()].sort((a,b) => b.length - a.length);
+    for (const name of sorted) {
+      if (name === myName) continue;
+      const prefix = "#" + name + " ";
+      if (content.toLowerCase().startsWith(prefix.toLowerCase())) {
+        e2eTarget = name;
+        plaintext = content.slice(prefix.length).trim();
+        break;
+      }
+    }
+  }
+
+  if (e2eTarget && plaintext) {
+    if (!peerPubKeys.has(e2eTarget)) {
+      notify(`🔒 No encryption key for ${e2eTarget} yet — wait a moment and try again.`, "error", 4000);
+      return;
+    }
+    const enc = await e2eEncrypt(e2eTarget, plaintext);
+    if (!enc) { notify("🔒 Encryption failed.", "error"); return; }
+    emit({
+      type:      "chat-message",
+      channel:   activeTextChannel,
+      content:   `🔒 ${enc.ct}`,
+      e2e:       true,
+      recipient: e2eTarget,
+      iv:        enc.iv,
+      senderPub: enc.senderPub,
+    });
+    // Show our own sent copy decrypted (only we can see it)
+    appendMessage(activeTextChannel, {
+      from:      myName,
+      emoji:     myEmoji,
+      content:   `🔒 **(Private to ${e2eTarget})** ${plaintext}`,
+      timestamp: Date.now(),
+      e2eSent:   true,
+    });
+    ta.value = ""; autoResize(ta);
+    return;
+  }
+
+  // Typed #name but no match — warn them
+  if (content.startsWith("#") && !e2eTarget) {
+    const possibleName = content.split(" ")[0].slice(1);
+    if (possibleName) {
+      notify(`User "${possibleName}" not found online. Normal message sent.`, "info", 3000);
+    }
+  }
+
+  if(nexusAttachFile){
+    emit({
+      type:       "chat-message",
+      channel:    activeTextChannel,
+      content:    content || "",
+      attachment: { data: nexusAttachFile.data, mime_type: nexusAttachFile.mime_type, name: nexusAttachFile.name },
+      replyTo:    replyingTo||undefined
+    });
+    cancelNexusAttach();
+  } else {
+    emit({type:"chat-message", channel:activeTextChannel, content, replyTo:replyingTo||undefined});
+  }
+  cancelReply();
+  ta.value=""; autoResize(ta);
+}
+
+/* ══ Members panel ═══════════════════════════════════════════════════════════ */
+function renderMembers(){
+  const list=[...playerList.values()];
+  document.getElementById("online-label").textContent=`ONLINE — ${list.length}`;
+  document.getElementById("online-members").innerHTML=list.map(p=>`<div class="member-row"><div class="mr-av">${esc(p.emoji||defaultEmoji(p.name))}<div class="status-dot"></div></div><div class="mr-info"><div class="mr-name">${esc(p.name)}${p.isHost?" 👑":""}</div><div class="mr-activity">${p.group&&p.group.startsWith("vc-")?"🔊 In Voice":"Online"}</div></div></div>`).join("");
+}
+function toggleMembers(){const a=document.getElementById("sidebar-right");const b=document.getElementById("members-btn");a.hidden=!a.hidden;b.classList.toggle("active",!a.hidden);}
+
+/* ══ Audio ═══════════════════════════════════════════════════════════════════ */
+async function initAudio(deviceId=null){
+  const constraints={audio:deviceId?{deviceId:{exact:deviceId},echoCancellation:true,noiseSuppression:true}:{echoCancellation:true,noiseSuppression:true},video:false};
+  if(localStream)localStream.getTracks().forEach(t=>t.stop());
+  localStream=await navigator.mediaDevices.getUserMedia(constraints);
+  if(!audioCtx){audioCtx=new(window.AudioContext||window.webkitAudioContext)();masterGain=audioCtx.createGain();masterGain.gain.value=1;masterGain.connect(audioCtx.destination);}
+  analyser=audioCtx.createAnalyser();analyser.fftSize=256;
+  audioCtx.createMediaStreamSource(localStream).connect(analyser);
+  localStream.getAudioTracks().forEach(t=>{t.enabled=false;});muted=true;
+  for(const{pc}of peers.values()){const s=pc.getSenders().find(s=>s.track?.kind==="audio");if(s)await s.replaceTrack(localStream.getAudioTracks()[0]);}
+  await populateDevices();
+}
+async function populateDevices(){
+  const devs=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==="audioinput");
+  const sel=document.getElementById("mic-select");sel.innerHTML="";
+  devs.forEach(d=>{const opt=document.createElement("option");opt.value=d.deviceId;opt.text=d.label||`Mic ${d.deviceId.slice(0,8)}`;const cur=localStream?.getAudioTracks()[0]?.getSettings().deviceId;if(cur===d.deviceId)opt.selected=true;sel.appendChild(opt);});
+}
+
+/* Waveform */
+(function drawWaveform(){
+  const canvas=document.getElementById("waveform");const ctx=canvas.getContext("2d");const buf=new Uint8Array(128);
+  function draw(){requestAnimationFrame(draw);const W=canvas.width,H=canvas.height;ctx.fillStyle="#313338";ctx.fillRect(0,0,W,H);if(!analyser||muted){ctx.strokeStyle="#383a40";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();return;}analyser.getByteTimeDomainData(buf);ctx.strokeStyle="#5865f2";ctx.lineWidth=1.5;ctx.beginPath();const sw=W/buf.length;buf.forEach((v,i)=>{const y=(v/128)*H/2;i===0?ctx.moveTo(0,y):ctx.lineTo(i*sw,y);});ctx.stroke();}
+  draw();
+})();
+
+/* Volume meter */
+function attachMeter(name,stream){
+  if(!audioCtx)return;
+  const src=audioCtx.createMediaStreamSource(stream);const anal=audioCtx.createAnalyser();anal.fftSize=256;src.connect(anal);
+  const buf=new Uint8Array(anal.frequencyBinCount);
+  function tick(){if(!peers.has(name))return;requestAnimationFrame(tick);anal.getByteFrequencyData(buf);const avg=buf.reduce((a,b)=>a+b,0)/buf.length;const p=peers.get(name);p.volumeLevel=avg/128;const bars=document.querySelectorAll(`#vbars-${CSS.escape(name)} .vm-bar`);bars.forEach((b,i)=>b.classList.toggle("lit",p.volumeLevel>(i+1)/(bars.length+1)));const card=document.getElementById(`vc-card-${CSS.escape(name)}`);if(card)card.classList.toggle("speaking",p.volumeLevel>0.05);buildSidebar();}
+  tick();
+}
+
+/* ══ WebRTC ══════════════════════════════════════════════════════════════════ */
+const RTC_CONFIG={iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"},{urls:"stun:stun.cloudflare.com:3478"},{urls:"turn:free.expressturn.com:3478",username:"000000002089417646",credential:"3OuMM4lvQShVOaG8ZZb7MO1AhdA="},{urls:"turns:free.expressturn.com:5349",username:"000000002089417646",credential:"3OuMM4lvQShVOaG8ZZb7MO1AhdA="}]};
+
+function createPeer(remoteName){
+  const pc=new RTCPeerConnection(RTC_CONFIG);
+  const entry={pc,gainNode:null,state:"connecting",makingOffer:false,volumeLevel:0};
+  peers.set(remoteName,entry);
+  if(localStream)localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+  pc.onicecandidate=({candidate})=>{if(candidate)emit({type:"ice-candidate",targetId:remoteName,fromId:myName,candidate:candidate.toJSON()});};
+  pc.onconnectionstatechange=()=>{const s=pc.connectionState;entry.state=s==="connected"?"connected":s==="failed"?"failed":"connecting";if(isViewingVoice&&viewingVC===joinedVoiceChannel)renderVcCards();if(s==="connected")notify(`🎙 Connected to ${remoteName}`,"success");if(s==="failed")notify(`📡 Lost connection to ${remoteName}`,"error");};
+  pc.oniceconnectionstatechange=()=>{if(pc.iceConnectionState==="failed")pc.restartIce();};
+  pc.ontrack=(e)=>{if(audioCtx?.state==="suspended")audioCtx.resume();const stream=e.streams[0];if(!stream)return;if(entry.gainNode)entry.gainNode.disconnect();const src=audioCtx.createMediaStreamSource(stream);const gain=audioCtx.createGain();gain.gain.value=deafened?0:1;src.connect(gain);gain.connect(masterGain);entry.gainNode=gain;let el=document.getElementById(`sink-${remoteName}`);if(!el){el=Object.assign(document.createElement("audio"),{id:`sink-${remoteName}`,autoplay:true,muted:true});document.getElementById("audio-sinks").appendChild(el);}el.srcObject=stream;attachMeter(remoteName,stream);};
+  return pc;
+}
+async function initiateOffer(name){const entry=peers.get(name);if(!entry)return;entry.makingOffer=true;try{const offer=await entry.pc.createOffer();await entry.pc.setLocalDescription(offer);emit({type:"offer",targetId:name,fromId:myName,sdp:entry.pc.localDescription.sdp,sdpType:entry.pc.localDescription.type});}finally{entry.makingOffer=false;}}
+async function handleOffer(from,sdp,sdpType){if(!peers.has(from))createPeer(from);const{pc}=peers.get(from);const collision=sdpType!=="offer"||pc.signalingState!=="stable";if(!(myName>from)&&collision)return;await pc.setRemoteDescription({type:sdpType,sdp});const answer=await pc.createAnswer();await pc.setLocalDescription(answer);emit({type:"answer",targetId:from,fromId:myName,sdp:pc.localDescription.sdp,sdpType:pc.localDescription.type});}
+async function handleAnswer(from,sdp,sdpType){const p=peers.get(from);if(!p||p.pc.signalingState==="stable")return;await p.pc.setRemoteDescription({type:sdpType,sdp});}
+async function handleIce(from,candidate){const p=peers.get(from);if(!p)return;try{await p.pc.addIceCandidate(new RTCIceCandidate(candidate));}catch(e){if(!p.makingOffer)console.warn(e);}}
+function destroyPeer(name){const p=peers.get(name);if(!p)return;p.pc.close();if(p.gainNode)p.gainNode.disconnect();document.getElementById(`sink-${name}`)?.remove();peers.delete(name);}
+
+/* ══ Player sync ═════════════════════════════════════════════════════════════ */
+function syncPlayers(list){
+  playerList.clear();
+  for(const p of list){
+    playerList.set(p.name,p);
+    if(p.isHost)hostName=p.name;
+    // Import their public key for E2E encryption
+    if(p.pubkey && p.name !== myName) storePeerPubKey(p.name, p.pubkey);
+  }
+  if(joinedVoiceChannel){
+    const vcMembers=list.filter(p=>p.group===joinedVoiceChannel&&p.name!==myName);
+    for(const p of vcMembers){if(!peers.has(p.name)){createPeer(p.name);if(myName<p.name)setTimeout(()=>initiateOffer(p.name),150);}}
+    for(const name of[...peers.keys()]){if(!vcMembers.find(p=>p.name===name))destroyPeer(name);}
+  }else{for(const name of[...peers.keys()])destroyPeer(name);}
+  buildSidebar();renderMembers();
+  if(isViewingVoice){ renderVcCards(); refreshVoiceView(); }
+}
+
+/* ══ Mute / Deafen ═══════════════════════════════════════════════════════════ */
+function setMuted(val){if(!localStream)return;muted=val;localStream.getAudioTracks().forEach(t=>{t.enabled=!muted;});document.getElementById("mic-btn").textContent=muted?"🔇":"🎙";document.getElementById("mic-btn").classList.toggle("active-muted",muted);document.getElementById("vsb-muted-icon").hidden=!muted;if(!muted&&audioCtx?.state==="suspended")audioCtx.resume();}
+function toggleMute(){if(localStream)setMuted(!muted);}
+function toggleDeafen(){deafened=!deafened;document.getElementById("deafen-btn").textContent=deafened?"🔕":"🔊";document.getElementById("deafen-btn").classList.toggle("active-muted",deafened);for(const{gainNode}of peers.values()){if(gainNode)gainNode.gain.value=deafened?0:1;}if(masterGain)masterGain.gain.value=deafened?0:document.getElementById("master-vol").value/100;}
+
+/* PTT */
+document.addEventListener("keydown",e=>{if(!localStream||!joinedVoiceChannel)return;if(e.code==="KeyM"&&!pttActive&&document.activeElement.tagName!=="INPUT"&&document.activeElement.tagName!=="TEXTAREA"){pttActive=true;setMuted(false);}});
+document.addEventListener("keyup",e=>{if(e.code==="KeyM"&&pttActive){pttActive=false;setMuted(true);}});
+
+/* ══ Chat events ═════════════════════════════════════════════════════════════ */
+async function onChatMessage(d){
+  // ── E2E message ───────────────────────────────────────────────────────────
+  if (d.e2e) {
+    // Not for us and we didn't send it — completely ignore, show nothing
+    if (d.recipient !== myName && d.from !== myName) return;
+
+    if (d.senderPub && d.from !== myName) await storePeerPubKey(d.from, d.senderPub);
+
+    if (d.recipient === myName) {
+      // We are the intended recipient — decrypt and show
+      const ctB64 = d.content.replace(/^🔒\s*/, "");
+      const plain = await e2eDecrypt(d.from, ctB64, d.iv);
+      appendMessage(d.channel, {
+        from: d.from, emoji: d.emoji,
+        content: plain !== null
+          ? `🔒 **(Private)** ${plain}`
+          : `🔒 [Could not decrypt — key mismatch]`,
+        timestamp: d.timestamp||Date.now(),
+        e2eReceived: true,
+      });
+    }
+    // Everyone else (including bystanders) sees nothing — message is invisible
+    return;
+  }
+  // Normal unencrypted message
+  appendMessage(d.channel,{from:d.from,emoji:d.emoji,content:d.content,timestamp:d.timestamp||Date.now(),attachment:d.attachment||null});
+}
+function onChatHistory(channels){for(const[ch,msgs]of Object.entries(channels)){if(chatMessages.has(ch))chatMessages.set(ch,msgs);}renderMessages(activeTextChannel);}
+
+/* ══ Typing ══════════════════════════════════════════════════════════════════ */
+function onTyping(from,channel){if(from===myName)return;if(typingMap.has(from))clearTimeout(typingMap.get(from).timer);const timer=setTimeout(()=>{typingMap.delete(from);updateTypingBar();},4000);typingMap.set(from,{channel,timer});updateTypingBar();}
+function onTypingStop(from){if(typingMap.has(from)){clearTimeout(typingMap.get(from).timer);typingMap.delete(from);updateTypingBar();}}
+function updateTypingBar(){const el=document.getElementById("typing-bar");const u=[...typingMap.entries()].filter(([,v])=>!isViewingVoice&&v.channel===activeTextChannel).map(([n])=>n);if(!u.length){el.innerHTML="";return;}const names=u.length===1?`<strong>${esc(u[0])}</strong>`:u.length===2?`<strong>${esc(u[0])}</strong> and <strong>${esc(u[1])}</strong>`:"Several people";el.innerHTML=`<span style="margin-right:5px;">⣾</span>${names} ${u.length===1?"is":"are"} typing…`;}
+
+/* ══ Player events ═══════════════════════════════════════════════════════════ */
+function onPlayerJoined(name,emoji){if(name===myName)return;notify(`${emoji||"👤"} ${name} joined`,"success",3000);postSystemMsg("general",`${emoji||"👤"} **${name}** joined the server`);playTone(660,.12);setTimeout(()=>playTone(880,.15),120);}
+function onPlayerLeft(name){if(name===myName)return;notify(`👋 ${name} left`,"info",3000);postSystemMsg("general",`👋 **${name}** left the server`);playTone(440,.18);}
+function handleFloorMute(active){if(!localStream)return;if(active){localStream.getAudioTracks().forEach(t=>{t.enabled=false;});notify("📢 Muted by host","info",99999);}else{localStream.getAudioTracks().forEach(t=>{t.enabled=!muted;});document.querySelectorAll(".notif").forEach(n=>{if(n.textContent.includes("Muted by host"))n.remove();});notify("📢 Mute released","info",2000);}}
+function handleKicked(reason){shouldReconnect=false;clearTimeout(reconnectTimer);clearInterval(pingTimer);if(ws){try{ws.close();}catch{}ws=null;}for(const n of[...peers.keys()])destroyPeer(n);localStream?.getTracks().forEach(t=>t.stop());returnToLogin("❌ "+(reason||"You were removed from the server."));notify("You were kicked!","error",6000);}
+
+/* ══ Settings ════════════════════════════════════════════════════════════════ */
+function openSettings(){document.getElementById("modal-settings").hidden=false;}
+function closeSettings(){document.getElementById("modal-settings").hidden=true;}
+function setTheme(name){document.body.className=name?`theme-${name}`:"";document.querySelectorAll(".theme-dot").forEach(d=>d.classList.remove("active"));const titles={"":"Dark","light":"Light","amoled":"AMOLED","green":"Green"};document.querySelector(`.theme-dot[title="${titles[name]||"Dark"}"]`)?.classList.add("active");localStorage.setItem("nexus-theme",name);}
+const savedTheme=localStorage.getItem("nexus-theme");if(savedTheme!==null)setTheme(savedTheme);
+
+function setConnState(state){const isConn=state==="connected",isRecon=state==="reconnecting";const cls=isConn?"":isRecon?"reconnecting":"offline";const lbl=isConn?"Connected":isRecon?"Reconnecting…":"Offline";["conn-dot","s-conn-dot"].forEach(id=>{const el=document.getElementById(id);if(el)el.className=`conn-dot ${cls}`;});["conn-label","s-conn-label"].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=lbl;});}
+
+/* ══ Input events ════════════════════════════════════════════════════════════ */
+document.getElementById("message-input").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage();}});
+document.getElementById("message-input").addEventListener("input",()=>{autoResize(document.getElementById("message-input"));const now=Date.now();if(now-lastTypingSent>2000){emit({type:"typing",channel:activeTextChannel});lastTypingSent=now;}});
+document.getElementById("mic-select").addEventListener("change",async e=>{await initAudio(e.target.value);notify("Microphone switched","info");});
+navigator.mediaDevices.addEventListener("devicechange",populateDevices);
+document.getElementById("master-vol").addEventListener("input",e=>{const v=e.target.value;document.getElementById("vol-label").textContent=v+"%";if(masterGain&&!deafened)masterGain.gain.value=v/100;});
+document.getElementById("li-pass").addEventListener("keydown",e=>{if(e.key==="Enter")doLogin();});
+document.getElementById("rg-pass2").addEventListener("keydown",e=>{if(e.key==="Enter")doRegister();});
+document.addEventListener("click",()=>audioCtx?.state==="suspended"&&audioCtx.resume());
+
+/* ══ Tone sounds ═════════════════════════════════════════════════════════════ */
+function playTone(freq,duration,type="sine"){if(!audioCtx)return;const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();osc.connect(gain);gain.connect(audioCtx.destination);osc.type=type;osc.frequency.value=freq;gain.gain.setValueAtTime(.25,audioCtx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);osc.start();osc.stop(audioCtx.currentTime+duration);}
+
+/* ══ Mobile keep-alive ═══════════════════════════════════════════════════════ */
+let wakeLock=null,silentNode=null,keepAliveInterval=null;
+async function requestWakeLock(){try{if("wakeLock"in navigator){wakeLock=await navigator.wakeLock.request("screen");wakeLock.addEventListener("release",()=>setTimeout(requestWakeLock,500));}}catch{}}
+function startSilentAudio(){
+  if(!audioCtx||silentNode)return;
+  const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+  gain.gain.value=0.001;
+  osc.connect(gain);gain.connect(audioCtx.destination);osc.start();silentNode=osc;
+  updateMediaSession();
+}
+
+function updateMediaSession(){
+  if(!("mediaSession" in navigator)) return;
+  const inVC = !!joinedVoiceChannel;
+  const vcName = inVC ? (getAllVoiceChannels().find(v=>v.id===joinedVoiceChannel)?.name || "Voice") : "Nexus";
+
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title:  inVC ? `📞 ${vcName}` : "Nexus",
+    artist: inVC ? `Voice call in progress — ${myName}` : "Your space to talk, chat, and hang out",
+    album:  "Nexus",
+  });
+  navigator.mediaSession.playbackState = "playing";
+
+  // Override play/pause/stop so phone controls don't kill audio
+  ["play","pause","stop"].forEach(a => {
+    try { navigator.mediaSession.setActionHandler(a, () => {
+      // Resume audio context if suspended but never stop it
+      if(audioCtx?.state === "suspended") audioCtx.resume();
+    }); } catch {}
+  });
+
+  // Show "end call" action on phones when in VC
+  try {
+    if(inVC){
+      navigator.mediaSession.setActionHandler("hangup", () => leaveVoiceChannel());
+    } else {
+      navigator.mediaSession.setActionHandler("hangup", null);
+    }
+  } catch {}
+}
+function keepAudioAlive(){if(audioCtx?.state==="suspended")audioCtx.resume();if(!silentNode)startSilentAudio();}
+function startKeepAlive(){clearInterval(keepAliveInterval);keepAliveInterval=setInterval(keepAudioAlive,2000);}
+document.addEventListener("visibilitychange",async()=>{if(audioCtx?.state==="suspended")await audioCtx.resume();await requestWakeLock();startSilentAudio();if(localStream&&!muted)localStream.getAudioTracks().forEach(t=>{t.enabled=true;});});
+
+/* ══ DM System (channel-based) ════════════════════════════════════════════════ */
+// A DM is just a private text channel named dm_userA_userB (alphabetical order)
+// and a private voice channel named dvc_userA_userB
+// Only the two users involved can see/join them
+
+let activeDMUser = null;
+let dmPanelOpen  = false;
+
+function dmChannelId(a, b){ return "dm_"  + [a,b].sort().join("_"); }
+function dmVcId(a, b)     { return "dvc_" + [a,b].sort().join("_"); }
+
+function isDMChannel(id){ return id && (id.startsWith("dm_") || id.startsWith("dvc_")); }
+
+function toggleDMPanel(){
+  dmPanelOpen = !dmPanelOpen;
+  document.getElementById("dm-panel").classList.toggle("open", dmPanelOpen);
+  if(dmPanelOpen) renderDMList();
+}
+
+function renderDMList(){
+  const el = document.getElementById("dm-list");
+  // Find all DM channels this user is part of from the channel list
+  const myDMs = [...customTextChannels, ...customVoiceChannels]
+    .filter(ch => isDMChannel(ch.id) && ch.id.includes(myName));
+  if(!myDMs.length){
+    el.innerHTML = `<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:24px 0;">No conversations yet.<br>Click + New to start one!</div>`;
+    return;
+  }
+  // Only show text DM channels in the list
+  const textDMs = myDMs.filter(ch => ch.id.startsWith("dm_"));
+  el.innerHTML = textDMs.map(ch => {
+    const other = ch.id.replace("dm_","").split("_").find(n=>n!==myName) || "?";
+    return `<div class="dm-item" onclick="openDMChat('${other}')">
+      <span class="dm-av">${getEmoji(other)}</span>
+      <div class="dm-info">
+        <div class="dm-name">${esc(other)}</div>
+        <div class="dm-preview">Click to open</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openDMPicker(){
+  const list = document.getElementById("dm-picker-list");
+  // Use registeredUsers if available, fallback to online playerList
+  let users = registeredUsers.filter(u => u.name !== myName);
+  if(!users.length){
+    // fallback to online users
+    users = [...playerList.values()]
+      .filter(p => p.name !== myName)
+      .map(p => ({name:p.name, emoji:p.emoji}));
+  }
+  if(!users.length){
+    list.innerHTML = `<div style="color:var(--text-muted);padding:16px;text-align:center;font-size:13px;">No other users found.</div>`;
+    document.getElementById("dm-picker").hidden = false;
+    return;
+  }
+  list.innerHTML = users.map(u=>`
+    <div class="dm-picker-user" onclick="startDM('${esc(u.name)}')">
+      <span style="font-size:24px;">${u.emoji||defaultEmoji(u.name)}</span>
+      <span style="font-weight:600;">${esc(u.name)}</span>
+      <span style="font-size:11px;color:var(--text-muted);margin-left:auto;">${playerList.has(u.name)?'🟢':'⚫'}</span>
+    </div>`).join('');
+  document.getElementById("dm-picker").hidden = false;
+}
+
+function startDM(user){
+  document.getElementById("dm-picker").hidden = true;
+  // Create the private text + voice channels if they don't exist
+  const chId = dmChannelId(myName, user);
+  const vcId  = dmVcId(myName, user);
+  // Create text channel
+  emit({ type:"create-channel", channelName: chId, kind:"text",
+    dmUsers:[myName, user] });
+  // Create voice channel
+  emit({ type:"create-channel", channelName: vcId, kind:"voice",
+    dmUsers:[myName, user] });
+  openDMChat(user);
+}
+
+function openDMChat(user){
+  activeDMUser = user;
+  document.getElementById("dm-chat-av").textContent = getEmoji(user);
+  document.getElementById("dm-chat-name").textContent = user;
+  document.getElementById("dm-chat").classList.add("open");
+  document.getElementById("dm-panel").classList.remove("open");
+  dmPanelOpen = false;
+  renderDMMessages();
+}
+
+function renderDMChatMessages(){
+  const chId = dmChannelId(myName, activeDMUser);
+  if(!chatMessages.has(chId)) chatMessages.set(chId,[]);
+  const msgs = chatMessages.get(chId);
+  const el   = document.getElementById("dm-messages");
+  if(!msgs.length){
+    el.innerHTML=`<div style="color:var(--text-muted);text-align:center;padding:40px 0;font-size:13px;">Start of your conversation with ${esc(activeDMUser)}</div>`;
+  } else {
+    el.innerHTML = msgs.map(m=>{
+      const mine=(m.from||m.sender)===myName;
+      return `<div class="dm-msg ${mine?'mine':''}">
+        <span class="dm-msg-av">${getEmoji(m.from||m.sender||'')}</span>
+        <div>
+          <div class="dm-msg-bubble">${esc(m.content||m.text||'')}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  el.scrollTop=el.scrollHeight;
+}
+
+// alias so both names work
+function renderDMMessages(){ renderDMChatMessages(); }
+
+function sendDMMessage(){
+  const inp=document.getElementById("dm-input");
+  const text=inp.value.trim();
+  if(!text||!activeDMUser)return;
+  inp.value='';
+  const chId=dmChannelId(myName,activeDMUser);
+  if(!chatMessages.has(chId))chatMessages.set(chId,[]);
+  chatMessages.get(chId).push({from:myName,content:text,ts:Date.now()});
+  emit({type:"chat-message",channel:chId,content:text});
+  renderDMChatMessages();
+}
+
+function dmInputKey(e){
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendDMMessage(); }
+}
+
+function sendDMVoiceInvite(){
+  if(!activeDMUser) return;
+  const vcId = dmVcId(myName, activeDMUser);
+  // Send a call invite message in the DM text channel
+  const chId = dmChannelId(myName, activeDMUser);
+  emit({ type:"chat-message", channel:chId,
+    content:`📞 **${myName}** started a voice call — join **${vcId}**` });
+  // Join the private voice channel
+  joinVoiceChannel(vcId);
+  notify(`📞 Calling ${activeDMUser}...`, "success");
+}
+
+function handleDMMsg(d){
+  if(d.type==="chat-message" && isDMChannel(d.channel)){
+    const other = (d.from||d.sender)===myName
+      ? d.channel.replace("dm_","").split("_").find(n=>n!==myName)
+      : (d.from||d.sender);
+    if(!chatMessages.has(d.channel)) chatMessages.set(d.channel,[]);
+    chatMessages.get(d.channel).push(d);
+    if(activeDMUser===other){
+      renderDMChatMessages();
+    } else {
+      notify(`💬 ${d.from||d.sender}: ${(d.content||d.text||'').slice(0,50)}`,"info");
+    }
+  }
+}
+
+/* ══ Phone Call Overlay ═══════════════════════════════════════════════════════ */
+let callTimerInterval=null,callStartTime=null;
+
+function showCallOverlay(vcName){
+  const ov=document.getElementById("call-overlay");
+  document.getElementById("call-overlay-channel").textContent=vcName;
+  document.getElementById("call-overlay-avatar").textContent=myEmoji||"🎙";
+  ov.classList.add("active");
+  callStartTime=Date.now();
+  clearInterval(callTimerInterval);
+  callTimerInterval=setInterval(()=>{
+    const s=Math.floor((Date.now()-callStartTime)/1000);
+    document.getElementById("call-overlay-timer").textContent=
+      String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+    // Update member count
+    if(joinedVoiceChannel){
+      const cnt=1+[...playerList.values()].filter(p=>p.group===joinedVoiceChannel&&p.name!==myName).length;
+      document.getElementById("call-overlay-members").textContent=cnt+" connected";
+    }
+  },1000);
+  updateCallOverlay();
+}
+
+function hideCallOverlay(){
+  document.getElementById("call-overlay").classList.remove("active");
+  clearInterval(callTimerInterval);callTimerInterval=null;
+}
+
+function updateCallOverlay(){
+  const mb=document.getElementById("call-mute-btn");
+  const db=document.getElementById("call-deafen-btn");
+  if(mb){mb.textContent=muted?"🔇":"🎙";mb.classList.toggle("is-muted",muted);}
+  if(db){db.textContent=deafened?"🔕":"🔊";db.classList.toggle("is-deafened",deafened);}
+}
+
+/* ══ Reply System ════════════════════════════════════════════════════════════ */
+let replyingTo = null; // {id, from, content}
+
+function setReply(id, from, content){
+  replyingTo = {id, from, content};
+  const preview = document.getElementById("reply-preview");
+  preview.classList.add("active");
+  document.getElementById("reply-preview-text").innerHTML =
+    `Replying to <b>${esc(from)}</b>: ${esc(content)}`;
+  document.getElementById("message-input").focus();
+}
+
+function cancelReply(){
+  replyingTo = null;
+  document.getElementById("reply-preview").classList.remove("active");
+}
+
+function scrollToMsg(id){
+  const el = document.querySelector(`[data-msg-id="${id}"]`);
+  if(el){ el.scrollIntoView({behavior:"smooth",block:"center"});
+    el.style.background="var(--bg-hover)";
+    setTimeout(()=>el.style.background="",1500);
+  }
+}
+
+/* ══ PWA ═════════════════════════════════════════════════════════════════════ */
+document.head.appendChild(Object.assign(document.createElement("link"),{rel:"manifest",href:URL.createObjectURL(new Blob([JSON.stringify({name:"Nexus",short_name:"Nexus",start_url:"/",display:"standalone",background_color:"#313338",theme_color:"#5865f2"})],{type:"application/json"}))}));
+if("serviceWorker"in navigator)navigator.serviceWorker.register(URL.createObjectURL(new Blob([`self.addEventListener("install",e=>{self.skipWaiting();});self.addEventListener("activate",e=>{self.clients.claim();});self.addEventListener("fetch",e=>{if(e.request.url.includes("/ws"))return;e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});`],{type:"application/javascript"})),{type:"classic"}).catch(()=>{});
+
+/* ══ Mobile swipe sidebar ════════════════════════════════════════════════════ */
+(function initSwipeSidebar() {
+  const SWIPE_THRESHOLD    = 20;
+  const EDGE_ZONE          = 80;
+  const VELOCITY_THRESHOLD = 0.1;
+
+  let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+  let isSwiping = false, sidebarOpen = false;
+
+  const sb  = () => document.getElementById("sidebar-left");
+  const ov  = () => document.getElementById("sidebar-overlay");
+  const hint= () => document.getElementById("swipe-hint");
+
+  function openMobileSidebar() {
+    if (window.innerWidth > 600) return;
+    sidebarOpen = true;
+    sb()?.classList.add("sidebar-open");
+    ov()?.classList.add("visible");
+    if (hint()) hint().style.opacity = "0";
+  }
+
+  window.closeMobileSidebar = function() {
+    sidebarOpen = false;
+    sb()?.classList.remove("sidebar-open");
+    ov()?.classList.remove("visible");
+    setTimeout(() => { if (!sidebarOpen && hint()) hint().style.opacity = "0.6"; }, 300);
+  };
+
+  document.addEventListener("touchstart", (e) => {
+    if (window.innerWidth > 600) return;
+    const t = e.touches[0];
+    touchStartX = t.clientX; touchStartY = t.clientY; touchStartTime = Date.now();
+    isSwiping = t.clientX <= EDGE_ZONE || sidebarOpen;
+  }, { passive: true });
+
+  document.addEventListener("touchmove", (e) => {
+    if (!isSwiping || window.innerWidth > 600) return;
+    const t = e.touches[0];
+    const dx = t.clientX - touchStartX;
+    const dy = t.clientY - touchStartY;
+    if (Math.abs(dy) > Math.abs(dx) && Math.abs(dx) < 10) { isSwiping = false; return; }
+    const s = sb(); if (!s) return;
+    if (!sidebarOpen && dx > 0) {
+      const pct = Math.min(dx / 280, 1);
+      s.style.transform = `translateX(${-100 + pct * 100}%)`;
+      ov().style.display = "block";
+      ov().style.opacity = String(pct * 0.55);
+    } else if (sidebarOpen && dx < 0) {
+      const pct = Math.min(Math.abs(dx) / 280, 1);
+      s.style.transform = `translateX(${-pct * 100}%)`;
+      ov().style.opacity = String((1 - pct) * 0.55);
+    }
+  }, { passive: true });
+
+  document.addEventListener("touchend", (e) => {
+    if (!isSwiping || window.innerWidth > 600) return;
+    isSwiping = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartX;
+    const velocity = Math.abs(dx) / (Date.now() - touchStartTime);
+    const s = sb(); if (!s) return;
+    s.style.transform = ""; ov().style.opacity = ""; ov().style.display = "";
+    const shouldOpen  = dx >  SWIPE_THRESHOLD || (dx >  0 && velocity > VELOCITY_THRESHOLD);
+    const shouldClose = dx < -SWIPE_THRESHOLD || (dx <  0 && velocity > VELOCITY_THRESHOLD);
+    if (!sidebarOpen && shouldOpen)   openMobileSidebar();
+    else if (sidebarOpen && shouldClose) closeMobileSidebar();
+    else if (sidebarOpen)  openMobileSidebar();
+    else                   closeMobileSidebar();
+  }, { passive: true });
+
+  // Close sidebar when a channel is tapped
+  document.addEventListener("click", (e) => {
+    if (window.innerWidth > 600 || !sidebarOpen) return;
+    if (e.target.closest(".channel-item")) setTimeout(closeMobileSidebar, 120);
+  });
+
+  window.addEventListener("resize", () => { if (window.innerWidth > 600) closeMobileSidebar(); });
+})();
+
+buildSidebar();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════
+     NEXUS AI CHATBOT — code unchanged from original files
+════════════════════════════════════════════════════════ -->
+
+<!-- Chatbot CSS (verbatim from style.css) -->
+<style>
+/* ── Scope resets so they don't override Nexus globals ── */
+.chatbot-popup *,
+#chatbot-toggler {
+  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+}
+
+#chatbot-toggler {
+  position: fixed;
+  bottom: 30px;
+  right: 35px;
+  border: none;
+  height: 50px;
+  width: 50px;
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #5350C4;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  z-index: 9999;
+}
+
+body.show-chatbot #chatbot-toggler {
+  transform: rotate(90deg);
+}
+
+#chatbot-toggler span {
+  color: #fff;
+  position: absolute;
+  font-size: 1.4rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#chatbot-toggler span:last-child,
+body.show-chatbot #chatbot-toggler span:first-child {
+  opacity: 0;
+}
+
+body.show-chatbot #chatbot-toggler span:last-child {
+  opacity: 1;
+}
+
+.chatbot-popup {
+  position: fixed;
+  right: 35px;
+  bottom: 90px;
+  width: 420px;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 15px;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.2);
+  transform-origin: bottom right;
+  box-shadow: 0 0 128px 0 rgba(0, 0, 0, 0.1),
+    0 32px 64px -48px rgba(0, 0, 0, 0.5);
+  transition: all 0.1s ease;
+  z-index: 9998;
+}
+
+body.show-chatbot .chatbot-popup {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  padding: 15px 22px;
+  background: #5350C4;
+  justify-content: space-between;
+}
+
+.chat-header .header-info {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.header-info .chatbot-logo {
+  width: 35px;
+  height: 35px;
+  padding: 6px;
+  fill: #5350C4;
+  flex-shrink: 0;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.header-info .logo-text {
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.31rem;
+  letter-spacing: 0.02rem;
+}
+
+.chat-header #close-chatbot {
+  border: none;
+  color: #fff;
+  height: 40px;
+  width: 40px;
+  font-size: 1.6rem;
+  font-weight: 300;
+  line-height: 1;
+  margin-right: -10px;
+  cursor: pointer;
+  border-radius: 50%;
+  background: none;
+  transition: 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-header #close-chatbot:hover {
+  background: #3d39ac;
+}
+
+.chat-body {
+  padding: 25px 22px;
+  gap: 20px;
+  display: flex;
+  height: 460px;
+  overflow-y: auto;
+  margin-bottom: 82px;
+  flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: #ccccf5 transparent;
+}
+
+.chat-body,
+.chat-form .message-input:hover {
+  scrollbar-color: #ccccf5 transparent;
+}
+
+.chat-body .message {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+}
+
+.chat-body .message .bot-avatar {
+  width: 35px;
+  height: 35px;
+  padding: 6px;
+  fill: #fff;
+  flex-shrink: 0;
+  margin-bottom: 2px;
+  align-self: flex-end;
+  border-radius: 50%;
+  background: #5350C4;
+}
+
+.chat-body .message .message-text {
+  padding: 12px 16px;
+  max-width: 75%;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.chat-body .bot-message.thinking .message-text {
+  padding: 2px 16px;
+}
+
+.chat-body .bot-message .message-text {
+  background: #F2F2FF;
+  border-radius: 13px 13px 13px 3px;
+}
+
+.chat-body .user-message {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.chat-body .user-message .message-text {
+  color: #fff !important;
+  background: #5350C4;
+  border-radius: 13px 13px 3px 13px;
+}
+
+.chat-body .user-message .attachment {
+  width: 50%;
+  margin-top: -7px;
+  border-radius: 13px 3px 13px 13px;
+}
+
+.chat-body .bot-message .thinking-indicator {
+  display: flex;
+  gap: 4px;
+  padding-block: 15px;
+}
+
+.chat-body .bot-message .thinking-indicator .dot {
+  height: 7px;
+  width: 7px;
+  opacity: 0.7;
+  border-radius: 50%;
+  background: #6F6BC2;
+  animation: dotPulse 1.8s ease-in-out infinite;
+}
+
+.chat-body .bot-message .thinking-indicator .dot:nth-child(1) { animation-delay: 0.2s; }
+.chat-body .bot-message .thinking-indicator .dot:nth-child(2) { animation-delay: 0.3s; }
+.chat-body .bot-message .thinking-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotPulse {
+  0%, 44% { transform: translateY(0); }
+  28% { opacity: 0.4; transform: translateY(-4px); }
+  44% { opacity: 0.2; }
+}
+
+.chat-footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: #fff;
+  padding: 15px 22px 20px;
+}
+
+.chat-footer .chat-form {
+  display: flex;
+  align-items: center;
+  position: relative;
+  background: #fff;
+  border-radius: 32px;
+  outline: 1px solid #CCCCE5;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.06);
+  transition: 0s ease, border-radius 0s;
+}
+
+.chat-form:focus-within {
+  outline: 2px solid #5350C4;
+}
+
+.chat-form .message-input {
+  width: 100%;
+  height: 47px;
+  outline: none;
+  resize: none;
+  border: none;
+  max-height: 180px;
+  scrollbar-width: thin;
+  border-radius: inherit;
+  font-size: 0.95rem;
+  padding: 14px 0 12px 18px;
+  scrollbar-color: transparent transparent;
+  font-family: "Inter", sans-serif;
+  color: #000;
+  background: #fff;
+}
+
+.chat-form .chat-controls {
+  gap: 3px;
+  height: 47px;
+  display: flex;
+  padding-right: 6px;
+  align-items: center;
+  align-self: flex-end;
+}
+
+.chat-form .chat-controls button {
+  height: 35px;
+  width: 35px;
+  border: none;
+  cursor: pointer;
+  color: #706DB0;
+  border-radius: 50%;
+  font-size: 1.25rem;
+  background: none;
+  transition: 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.chat-form .chat-controls button:hover,
+body.show-emoji-picker .chat-controls #emoji-picker {
+  color: #3d39ac;
+  background: #f1f1ff;
+}
+
+.chat-form .chat-controls #send-message {
+  color: #fff;
+  display: none;
+  background: #5350C4;
+}
+
+.chat-form .chat-controls #send-message:hover {
+  background: #3d39ac;
+}
+
+.chat-form .message-input:valid ~ .chat-controls #send-message {
+  display: block;
+}
+
+.chat-form .file-upload-wrapper {
+  position: relative;
+  height: 35px;
+  width: 35px;
+}
+
+.chat-form .file-upload-wrapper :where(button, img) {
+  position: absolute;
+}
+
+.chat-form .file-upload-wrapper img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.chat-form .file-upload-wrapper #file-cancel {
+  color: #ff0000;
+  background: #fff;
+}
+
+.chat-form .file-upload-wrapper :where(img, #file-cancel),
+.chat-form .file-upload-wrapper.file-uploaded #file-upload {
+  display: none !important;
+}
+
+.chat-form .file-upload-wrapper.file-uploaded img,
+.chat-form .file-upload-wrapper.file-uploaded:hover #file-cancel {
+  display: flex !important;
+}
+
+.chat-form em-emoji-picker {
+  position: absolute;
+  left: 50%;
+  top: -337px;
+  width: 100%;
+  max-width: 350px;
+  visibility: hidden;
+  max-height: 330px;
+  transform: translateX(-50%);
+}
+
+body.show-emoji-picker .chat-form em-emoji-picker {
+  visibility: visible;
+}
+
+@media (max-width: 520px) {
+  #chatbot-toggler {
+    right: 20px;
+    bottom: 20px;
+  }
+  .chatbot-popup {
+    right: 0;
+    bottom: 0;
+    height: 100%;
+    border-radius: 0;
+    width: 100%;
+    z-index: 9999;
+  }
+  .chatbot-popup .chat-header {
+    padding: 12px 15px;
+  }
+  .chat-body {
+    height: calc(90% - 55px);
+    padding: 25px 15px;
+  }
+  .chat-footer {
+    padding: 10px 15px 15px;
+  }
+  .chat-form .file-upload-wrapper.file-uploaded #file-cancel {
+    opacity: 0;
+  }
+}
+</style>
+
+<!-- Chatbot HTML (verbatim from index.html) -->
+<button id="chatbot-toggler">
+  <span>💬</span>
+  <span>✕</span>
+</button>
+
+<div class="chatbot-popup">
+  <!-- Chatbot Header -->
+  <div class="chat-header">
+    <div class="header-info">
+      <svg class="chatbot-logo" xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 1024 1024">
+        <path d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z"/>
+      </svg>
+      <h2 class="logo-text">Chatbot</h2>
+    </div>
+    <button id="close-chatbot">⌄</button>
+  </div>
+
+  <!-- Chatbot Body -->
+  <div class="chat-body">
+    <div class="message bot-message">
+      <svg class="bot-avatar" xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 1024 1024">
+        <path d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z"/>
+      </svg>
+      <div class="message-text">Hey there 👋 <br /> How can I help you today?</div>
+    </div>
+  </div>
+
+  <!-- Chatbot Footer -->
+  <div class="chat-footer">
+    <form action="#" class="chat-form">
+      <textarea placeholder="Message..." class="message-input" required></textarea>
+      <div class="chat-controls">
+        <button type="button" id="emoji-picker">😊</button>
+        <div class="file-upload-wrapper">
+          <input type="file" accept="image/*" id="file-input" hidden />
+          <img src="#" />
+          <button type="button" id="file-upload">📎</button>
+          <button type="button" id="file-cancel">✕</button>
+        </div>
+        <button type="submit" id="send-message">↑</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Emoji Mart CDN (verbatim from original index.html) -->
+<script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
+
+<!-- Chatbot JS (verbatim from script.js, wrapped in IIFE to isolate scope from Nexus globals) -->
+<script>
+(function () {
+// Wait for full DOM so chatbot elements exist before querying them
+document.addEventListener("DOMContentLoaded", function() {
+const chatBody = document.querySelector(".chat-body");
+const messageInput = document.querySelector(".message-input");
+const sendMessage = document.querySelector("#send-message");
+const fileInput = document.querySelector("#file-input");
+const fileUploadWrapper = document.querySelector(".file-upload-wrapper");
+const fileCancelButton = fileUploadWrapper.querySelector("#file-cancel");
+const chatbotToggler = document.querySelector("#chatbot-toggler");
+const closeChatbot = document.querySelector("#close-chatbot");
+
+// API setup — key is set by the user in ⚙️ Settings → Chatbot API Key
+const GEMINI_API_KEY = "AIzaSyCXuqqdRndi56kjlCSOzRl9m-uWn6vUdmk"; // 👈 paste your Gemini API key here
+const API_KEY = () => GEMINI_API_KEY;
+const API_URL = () => `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY()}`;
+
+// Initialize user message and file data
+const userData = {
+  message: null,
+  file: {
+    data: null,
+    mime_type: null,
+  },
+};
+
+// Store chat history
+const chatHistory = [];
+const initialInputHeight = messageInput.scrollHeight;
+
+// Create message element with dynamic classes and return it
+const createMessageElement = (content, ...classes) => {
+  const div = document.createElement("div");
+  div.classList.add("message", ...classes);
+  div.innerHTML = content;
+  return div;
+};
+
+// Generate bot response using API
+const generateBotResponse = async (incomingMessageDiv) => {
+  const messageElement = incomingMessageDiv.querySelector(".message-text");
+
+  // Add user message to chat history
+  chatHistory.push({
+    role: "user",
+    parts: [{ text: userData.message }, ...(userData.file.data ? [{ inline_data: userData.file }] : [])],
+  });
+
+  // API request options
+  const requestOptions = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: chatHistory,
+    }),
+  };
+
+  try {
+    // Fetch bot response from API
+    if (!API_KEY()) {
+      messageElement.innerText = "⚠️ No Gemini API key set. Go to ⚙️ Settings → Chatbot API Key to add yours.";
+      messageElement.style.color = "#f0b232";
+      incomingMessageDiv.classList.remove("thinking");
+      chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: "smooth" });
+      return;
+    }
+    const response = await fetch(API_URL(), requestOptions);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error.message);
+
+    // Extract and display bot's response text
+    const apiResponseText = data.candidates[0].content.parts[0].text.replace(/\*\*(.*?)\*\*/g, "$1").trim();
+    messageElement.innerText = apiResponseText;
+
+    // Add bot response to chat history
+    chatHistory.push({
+      role: "model",
+      parts: [{ text: apiResponseText }],
+    });
+  } catch (error) {
+    // Handle error in API response
+    console.log(error);
+    messageElement.innerText = error.message;
+    messageElement.style.color = "#ff0000";
+  } finally {
+    // Reset user's file data, removing thinking indicator and scroll chat to bottom
+    userData.file = {};
+    incomingMessageDiv.classList.remove("thinking");
+    chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: "smooth" });
+  }
+};
+
+// Handle outgoing user messages
+const handleOutgoingMessage = (e) => {
+  e.preventDefault();
+  userData.message = messageInput.value.trim();
+  messageInput.value = "";
+  messageInput.dispatchEvent(new Event("input"));
+  fileUploadWrapper.classList.remove("file-uploaded");
+
+  // Create and display user message
+  const messageContent = `<div class="message-text"></div>
+                          ${userData.file.data ? `<img src="data:${userData.file.mime_type};base64,${userData.file.data}" class="attachment" />` : ""}`;
+
+  const outgoingMessageDiv = createMessageElement(messageContent, "user-message");
+  outgoingMessageDiv.querySelector(".message-text").innerText = userData.message;
+  chatBody.appendChild(outgoingMessageDiv);
+  chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: "smooth" });
+
+  // Simulate bot response with thinking indicator after a delay
+  setTimeout(() => {
+    const messageContent = `<svg class="bot-avatar" xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 1024 1024">
+            <path d="M738.3 287.6H285.7c-59 0-106.8 47.8-106.8 106.8v303.1c0 59 47.8 106.8 106.8 106.8h81.5v111.1c0 .7.8 1.1 1.4.7l166.9-110.6 41.8-.8h117.4l43.6-.4c59 0 106.8-47.8 106.8-106.8V394.5c0-59-47.8-106.9-106.8-106.9zM351.7 448.2c0-29.5 23.9-53.5 53.5-53.5s53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5-53.5-23.9-53.5-53.5zm157.9 267.1c-67.8 0-123.8-47.5-132.3-109h264.6c-8.6 61.5-64.5 109-132.3 109zm110-213.7c-29.5 0-53.5-23.9-53.5-53.5s23.9-53.5 53.5-53.5 53.5 23.9 53.5 53.5-23.9 53.5-53.5 53.5zM867.2 644.5V453.1h26.5c19.4 0 35.1 15.7 35.1 35.1v121.1c0 19.4-15.7 35.1-35.1 35.1h-26.5zM95.2 609.4V488.2c0-19.4 15.7-35.1 35.1-35.1h26.5v191.3h-26.5c-19.4 0-35.1-15.7-35.1-35.1zM561.5 149.6c0 23.4-15.6 43.3-36.9 49.7v44.9h-30v-44.9c-21.4-6.5-36.9-26.3-36.9-49.7 0-28.6 23.3-51.9 51.9-51.9s51.9 23.3 51.9 51.9z"/></svg>
+          <div class="message-text">
+            <div class="thinking-indicator">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+          </div>`;
+
+    const incomingMessageDiv = createMessageElement(messageContent, "bot-message", "thinking");
+    chatBody.appendChild(incomingMessageDiv);
+    chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: "smooth" });
+    generateBotResponse(incomingMessageDiv);
+  }, 600);
+};
+
+// Adjust input field height dynamically
+messageInput.addEventListener("input", () => {
+  messageInput.style.height = `${initialInputHeight}px`;
+  messageInput.style.height = `${messageInput.scrollHeight}px`;
+  document.querySelector(".chat-form").style.borderRadius = messageInput.scrollHeight > initialInputHeight ? "15px" : "32px";
+});
+
+// Handle Enter key press for sending messages
+messageInput.addEventListener("keydown", (e) => {
+  const userMessage = e.target.value.trim();
+  if (e.key === "Enter" && !e.shiftKey && userMessage && window.innerWidth > 768) {
+    handleOutgoingMessage(e);
+  }
+});
+
+// Handle file input change and preview the selected file
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    fileInput.value = "";
+    fileUploadWrapper.querySelector("img").src = e.target.result;
+    fileUploadWrapper.classList.add("file-uploaded");
+    const base64String = e.target.result.split(",")[1];
+
+    // Store file data in userData
+    userData.file = {
+      data: base64String,
+      mime_type: file.type,
+    };
+  };
+
+  reader.readAsDataURL(file);
+});
+
+// Cancel file upload
+fileCancelButton.addEventListener("click", () => {
+  userData.file = {};
+  fileUploadWrapper.classList.remove("file-uploaded");
+});
+
+// Initialize emoji picker and handle emoji selection
+const picker = new EmojiMart.Picker({
+  theme: "light",
+  skinTonePosition: "none",
+  previewPosition: "none",
+  onEmojiSelect: (emoji) => {
+    const { selectionStart: start, selectionEnd: end } = messageInput;
+    messageInput.setRangeText(emoji.native, start, end, "end");
+    messageInput.focus();
+  },
+  onClickOutside: (e) => {
+    if (e.target.id === "emoji-picker") {
+      document.body.classList.toggle("show-emoji-picker");
+    } else {
+      document.body.classList.remove("show-emoji-picker");
+    }
+  },
+});
+
+document.querySelector(".chat-form").appendChild(picker);
+
+sendMessage.addEventListener("click", (e) => handleOutgoingMessage(e));
+document.querySelector("#file-upload").addEventListener("click", () => fileInput.click());
+closeChatbot.addEventListener("click", () => document.body.classList.remove("show-chatbot"));
+chatbotToggler.addEventListener("click", () => document.body.classList.toggle("show-chatbot"));
+}); // end DOMContentLoaded
+})();
+</script>
+</body>
+</html>

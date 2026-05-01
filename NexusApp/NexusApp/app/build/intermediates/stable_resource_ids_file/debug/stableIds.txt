@@ -1,0 +1,10 @@
+com.nexus.app:style/AppTheme = 0x7f060000
+com.nexus.app:mipmap/ic_launcher_round = 0x7f040001
+com.nexus.app:mipmap/ic_launcher = 0x7f040000
+com.nexus.app:xml/network_security_config = 0x7f070000
+com.nexus.app:layout/activity_main = 0x7f030000
+com.nexus.app:id/webview = 0x7f020000
+com.nexus.app:color/white = 0x7f010002
+com.nexus.app:string/app_name = 0x7f050000
+com.nexus.app:color/bg_dark = 0x7f010001
+com.nexus.app:color/accent = 0x7f010000
