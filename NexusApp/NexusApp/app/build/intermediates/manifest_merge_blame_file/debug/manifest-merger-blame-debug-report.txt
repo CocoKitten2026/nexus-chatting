@@ -5,7 +5,7 @@
 5    android:versionName="1.0" >
 6
 7    <uses-sdk
-8        android:minSdkVersion="21"
+8        android:minSdkVersion="23"
 9        android:targetSdkVersion="34" />
 10
 11    <!-- Network -->
@@ -61,7 +61,7 @@
 37        android:allowBackup="true"
 37-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:30:9-35
 38        android:debuggable="true"
-39        android:extractNativeLibs="true"
+39        android:extractNativeLibs="false"
 40        android:hardwareAccelerated="true"
 40-->C:\Users\Antonio Galindo\Desktop\Nexus-chatting\NexusApp\NexusApp\app\src\main\AndroidManifest.xml:34:9-43
 41        android:icon="@mipmap/ic_launcher"

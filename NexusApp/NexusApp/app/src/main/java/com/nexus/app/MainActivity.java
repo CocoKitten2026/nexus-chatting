@@ -60,6 +60,7 @@ public class MainActivity extends Activity {
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
+        s.setJavaScriptCanOpenWindowsAutomatically(true);
         s.setDatabaseEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setAllowFileAccessFromFileURLs(true);
@@ -69,7 +70,9 @@ public class MainActivity extends Activity {
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         s.setGeolocationEnabled(true);
-        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        webView.setClickable(true);
+        webView.requestFocus(View.FOCUS_DOWN);
 
         // ── JS bridge so the web page can control the foreground service ──
         webView.addJavascriptInterface(new NexusBridge(), "NexusNative");

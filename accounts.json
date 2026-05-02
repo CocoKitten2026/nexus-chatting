@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Coco",
+    "passwordHash": "$argon2id$v=19$m=65536,t=2,p=1$P5YsbEAF1BvxjluRPbKyJhiriGndWXMhYuOTy2tRaGs$bnNR1gRVi3F9yrZNvIimNS+pRxhXn7E2BOZWbTce0lg",
+    "emoji": "🐱",
+    "createdAt": 1777701643495
+  },
+  {
+    "name": "Leo",
+    "passwordHash": "$argon2id$v=19$m=65536,t=2,p=1$f5FQpAuaHWdhkwpzLl0hetvqrZIl92oS3INF6OgcSro$Mq3/uE6pPiVnEp4QUvNASNjHg4b+uxwAhCyWjJ12Ylg",
+    "emoji": "🐱",
+    "createdAt": 1777701683657
+  },
+  {
+    "name": "Prueba",
+    "passwordHash": "$argon2id$v=19$m=65536,t=2,p=1$a2QgVPHu4si6JLpuzRFb10xFDSsydz95gcgLBgquulo$KsmUJLJAZgxbUOGTNIO63Wjfz/Tre8Mj/ADzyLloUg4",
+    "emoji": "🐱",
+    "createdAt": 1777701883049
+  }
+]
