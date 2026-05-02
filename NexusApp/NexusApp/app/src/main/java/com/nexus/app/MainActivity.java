@@ -45,7 +45,6 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         webView = findViewById(R.id.webview);
 
-        // ── Request mic permission up front ──────────────────
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(
                     new String[]{
@@ -56,7 +55,6 @@ public class MainActivity extends Activity {
             );
         }
 
-        // ── WebView settings ──────────────────────────────────
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
@@ -74,11 +72,24 @@ public class MainActivity extends Activity {
         webView.setClickable(true);
         webView.requestFocus(View.FOCUS_DOWN);
 
-        // ── JS bridge so the web page can control the foreground service ──
         webView.addJavascriptInterface(new NexusBridge(), "NexusNative");
 
-        // ── WebViewClient ─────────────────────────────────────
         webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                webView.evaluateJavascript(
+                        "document.getElementById('dm-chat').addEventListener('touchend', function(e) {" +
+                                "  var el = e.target;" +
+                                "  while(el) {" +
+                                "    if(el.classList && el.classList.contains('back-btn')) {" +
+                                "      document.getElementById('dm-chat').classList.remove('open');" +
+                                "      break;" +
+                                "    }" +
+                                "    el = el.parentElement;" +
+                                "  }" +
+                                "}, true);", null);
+            }
+
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
@@ -90,11 +101,9 @@ public class MainActivity extends Activity {
             }
         });
 
-        // ── WebChromeClient – grants mic/camera to WebRTC ────
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onPermissionRequest(PermissionRequest request) {
-                // Grant ALL resources the page asks for (mic, camera, etc.)
                 request.grant(request.getResources());
             }
 
@@ -127,9 +136,7 @@ public class MainActivity extends Activity {
         webView.loadUrl("file:///android_asset/index.html");
     }
 
-    // ── JS Bridge ─────────────────────────────────────────────
     private class NexusBridge {
-        /** Called by JS when the user joins a voice channel */
         @JavascriptInterface
         public void onJoinVoice(String channelName) {
             runOnUiThread(() -> {
@@ -144,7 +151,6 @@ public class MainActivity extends Activity {
             });
         }
 
-        /** Called by JS when the user leaves a voice channel */
         @JavascriptInterface
         public void onLeaveVoice() {
             runOnUiThread(() -> {
@@ -155,12 +161,10 @@ public class MainActivity extends Activity {
         }
     }
 
-    // ── Permission result ─────────────────────────────────────
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == MIC_PERMISSION_REQUEST) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Reload so WebRTC picks up the granted permission
                 webView.reload();
             } else {
                 Toast.makeText(this, "Microphone permission is needed for voice channels", Toast.LENGTH_LONG).show();
