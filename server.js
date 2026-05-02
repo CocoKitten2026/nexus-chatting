@@ -16,6 +16,7 @@ const __dir  = dirname(fileURLToPath(import.meta.url));
 const ACCOUNTS_FILE  = join(__dir, "accounts.json");
 const CHANNELS_FILE  = join(__dir, "channels.json");
 const BANS_FILE      = join(__dir, "bans.json");
+const DM_FILE        = join(__dir, "dm_inbox.json");
 
 // ── Tunables ───────────────────────────────────────────────────────────────
 const MAX_MSG_HISTORY  = 200;
@@ -45,6 +46,29 @@ const playerPubKeys  = new Map(); // name → base64 SPKI public key
 const groups         = new Map();
 const typingTimers   = new Map();
 const chatHistory    = new Map();
+
+// ── DM inbox: name (lowercase) → [ {from, text, ts, type} ] ───────────────
+const dmInbox = new Map();
+
+async function loadDMInbox() {
+  try {
+    const file = Bun.file(DM_FILE);
+    if (!(await file.exists())) return;
+    const data = await file.json();
+    for (const [k, v] of Object.entries(data)) dmInbox.set(k, v);
+    console.log(`[DM]   Loaded offline DM inbox from ${DM_FILE}`);
+  } catch (e) {
+    console.warn("[DM]   Could not load dm_inbox.json:", e.message);
+  }
+}
+
+async function saveDMInbox() {
+  try {
+    await Bun.write(DM_FILE, JSON.stringify(Object.fromEntries(dmInbox), null, 2));
+  } catch (e) {
+    console.warn("[DM]   Could not save dm_inbox.json:", e.message);
+  }
+}
 
 TEXT_CHANNEL_IDS.forEach(id => chatHistory.set(id, []));
 BUILTIN_GROUPS.forEach(g  => groups.set(g, { password:null, members:new Set() }));
@@ -124,11 +148,13 @@ async function saveChannels() {
 }
 
 // ── Build channel list payload (safe — no password hashes) ─────────────────
-function buildChannelListPayload() {
+function buildChannelListPayload(forUser=null) {
   const textChannels  = [];
   const voiceChannels = [];
   for (const ch of customChannels.values()) {
-    const safe = { id: ch.id, name: ch.name, topic: ch.topic||`#${ch.name} channel`, hasPassword: !!ch.passwordHash };
+    // DM channels only visible to the two users involved
+    if (ch.dmUsers && forUser && !ch.dmUsers.includes(forUser)) continue;
+    const safe = { id: ch.id, name: ch.name, topic: ch.topic||`#${ch.name} channel`, hasPassword: !!ch.passwordHash, dmUsers: ch.dmUsers||null };
     if (ch.kind === "text")  textChannels.push(safe);
     if (ch.kind === "voice") voiceChannels.push(safe);
   }
@@ -337,14 +363,16 @@ async function handleMessage(ws, data) {
       type:"chat-message", channel:channelId,
       from:senderName, emoji:acc?.emoji||"",
       content:raw, timestamp:Date.now(),
+      id: `${senderName}_${Date.now()}`,
       ...(data.attachment  ? { attachment:  data.attachment  } : {}),
+      ...(data.replyTo     ? { replyTo:     data.replyTo     } : {}),
       ...(data.e2e         ? { e2e:         true,
                                recipient:   data.recipient,
                                iv:          data.iv,
                                senderPub:   data.senderPub   } : {}),
     };
     // Only store E2E messages as ciphertext (server can't read them anyway)
-    storeMessage(channelId, { from:msg.from, emoji:msg.emoji, content:msg.content, timestamp:msg.timestamp, attachment:msg.attachment||null, e2e:msg.e2e||false });
+    storeMessage(channelId, { from:msg.from, emoji:msg.emoji, content:msg.content, timestamp:msg.timestamp, attachment:msg.attachment||null, e2e:msg.e2e||false, id:msg.id });
     broadcast(msg);
     clearTyping(senderName, channelId);
     broadcast({ type:"typing-stop", from:senderName, channel:channelId }, senderName);
@@ -375,6 +403,29 @@ async function handleMessage(ws, data) {
       const target = wsClients.get(targetName);
       if (target) try { target.send(JSON.stringify({...data,fromId:data.fromId??senderName})); } catch {}
     }
+    return;
+  }
+
+  // ── Direct Messages ───────────────────────────────────────────────────────
+  if (type==="dm") {
+    const msg = { from:senderName, to:data.to, text:data.text, ts:Date.now(), type:"dm" };
+    const target = wsClients.get(data.to);
+    if (target) {
+      // Online — deliver immediately
+      try { target.send(JSON.stringify(msg)); } catch {}
+    } else {
+      // Offline — store in inbox
+      const key = data.to.toLowerCase();
+      if (!dmInbox.has(key)) dmInbox.set(key, []);
+      dmInbox.get(key).push(msg);
+      await saveDMInbox();
+    }
+    return;
+  }
+  if (type==="dm-vc-invite") {
+    // Voice calls only work when both online — skip offline storage
+    const target = wsClients.get(data.to);
+    if (target) try { target.send(JSON.stringify({...data, from:senderName})); } catch {}
     return;
   }
 
@@ -433,6 +484,49 @@ async function handleMessage(ws, data) {
   // ── Get channel list ─────────────────────────────────────────────────────
   if (type==="get-channel-list") {
     send(ws, { type:"channel-list", ...buildChannelListPayload() });
+    return;
+  }
+
+  if (type==="get-users") {
+    send(ws, { type:"user-list",
+      users: [...accounts.values()].map(a=>({name:a.name, emoji:a.emoji}))
+    });
+    return;
+  }
+
+  // ── Create DM channel (private, only 2 users) ────────────────────────────
+  if (type==="create-channel") {
+    const { channelName, kind, dmUsers } = data;
+    if (!channelName || !kind || !dmUsers || dmUsers.length !== 2) return;
+    const channelId = channelName;
+    // Already exists — just notify sender it's ready
+    if (customChannels.has(channelId)) {
+      const ch = customChannels.get(channelId);
+      const safe = { id:ch.id, name:ch.name, topic:ch.topic, hasPassword:false, dmUsers };
+      send(ws, { type:"channel-created", kind, channel:safe });
+      return;
+    }
+    const ch = {
+      id: channelId, name: channelName, kind,
+      topic: kind==="text" ? `Private conversation` : null,
+      passwordHash: null, createdBy: senderName, createdAt: Date.now(),
+      dmUsers, // store which users can access this
+    };
+    customChannels.set(channelId, ch);
+    await saveChannels();
+    if (kind==="voice") {
+      groups.set(channelId, { password:null, members:new Set() });
+      BUILTIN_GROUPS.add(channelId);
+    } else {
+      chatHistory.set(channelId, []);
+    }
+    const safe = { id:ch.id, name:ch.name, topic:ch.topic, hasPassword:false, dmUsers };
+    // Only notify the two DM users
+    for (const u of dmUsers) {
+      const target = wsClients.get(u);
+      if (target) try { target.send(JSON.stringify({ type:"channel-created", kind, channel:safe })); } catch {}
+    }
+    console.log(`[DM]   Private ${kind} channel "${channelId}" created`);
     return;
   }
 
@@ -499,14 +593,26 @@ function completeLogin(ws, name, emoji) {
   groups.get("global").members.add(name);
   playerGroups.set(name, "global");
 
-  send(ws, { type:"auth-ok", emoji });
+  send(ws, { type:"auth-ok", emoji,
+    registeredUsers: [...accounts.values()].map(a=>({name:a.name, emoji:a.emoji}))
+  });
 
-  setTimeout(() => {
+  setTimeout(async () => {
     broadcastPlayerList();
     sendChatHistory(ws);
-    // Send the full custom channel list so new user sees all channels immediately
-    send(ws, { type:"channel-list", ...buildChannelListPayload() });
+    send(ws, { type:"channel-list", ...buildChannelListPayload(name) });
     broadcast({ type:"player-joined", playerName:name, emoji }, name);
+    // Deliver offline DMs
+    const key = name.toLowerCase();
+    if (dmInbox.has(key) && dmInbox.get(key).length > 0) {
+      const msgs = dmInbox.get(key);
+      for (const msg of msgs) {
+        try { send(ws, msg); } catch {}
+      }
+      dmInbox.set(key, []);
+      await saveDMInbox();
+      console.log(`[DM]   Delivered ${msgs.length} offline message(s) to ${name}`);
+    }
   }, 100);
 }
 
@@ -524,6 +630,7 @@ async function serveFile(pathname) {
 await loadAccounts();
 await loadChannels();
 await loadBans();
+await loadDMInbox();
 
 Bun.serve({
   port: PORT,
@@ -556,8 +663,8 @@ Bun.serve({
   },
 
   websocket: {
-    sendPings:   true,   // protocol-level pings keep Cloudflare tunnel alive
-    idleTimeout: 120,    // drop truly dead connections after 120s
+    sendPings:   true,   // protocol-level pings keep Android alive
+    idleTimeout: 30,     // drop dead connections after 30s (client pings every 5s so legit users never hit this)
     open(ws)  { console.log("[WS]   New connection"); },
     message(ws, raw) { let d; try{d=JSON.parse(raw);}catch{return;} handleMessage(ws,d).catch(console.error); },
     close(ws) {
@@ -600,16 +707,47 @@ Commands:
   broadcast <message>     — system message to all channels
   history <channel-id>    — print last 20 messages
   clear <channel-id>      — wipe channel history
+  reset                   — wipe ALL data and start fresh (requires CONFIRM)
   help                    — show this list
 `.trim();
 
 // ── Ban flow state machine ─────────────────────────────────────────────────────────────────────────────────
-let banPending = null; // null | { step:"reason"|"confirm", name, reason }
+let banPending   = null; // null | { step:"reason"|"confirm", name, reason }
+let resetPending = false;
 
 rl.on("line", async line => {
   const raw   = line.trim();
   const parts = raw.split(/\s+/);
   const cmd   = parts[0]?.toLowerCase();
+
+  // Handle pending reset confirmation
+  if (resetPending) {
+    resetPending = false;
+    if (raw !== "CONFIRM") {
+      console.log("[RESET] Cancelled.");
+      return;
+    }
+    // Kick all users
+    for (const [name, ws] of wsClients.entries()) {
+      try { send(ws, { type:"kicked", reason:"Server is being reset. Please reconnect." }); ws.close(); } catch {}
+      cleanupPlayer(name);
+    }
+    // Wipe everything
+    accounts.clear();
+    bans.clear();
+    chatHistory.clear();
+    customChannels.clear();
+    dmInbox.clear();
+    // Re-init built-in channels
+    for (const id of TEXT_CHANNEL_IDS) chatHistory.set(id, []);
+    // Save empty files
+    await saveAccounts();
+    await saveChannels();
+    await Bun.write(BANS_FILE, "[]");
+    await saveDMInbox();
+    console.log("[RESET] ✅ Server reset complete — all data wiped. Server is fresh.");
+    return;
+  }
 
   // Handle pending ban flow
   if (banPending) {
@@ -820,6 +958,13 @@ rl.on("line", async line => {
     chatHistory.set(chId,[]);
     broadcast({type:"chat-history",channels:{[chId]:[]}});
     console.log(`[CMD]  #${chId} cleared ✓`);
+    return;
+  }
+
+  if (cmd==="reset") {
+    console.log("[RESET] ⚠️  This will wipe ALL messages, custom channels, accounts and bans.");
+    console.log("[RESET] Type CONFIRM to proceed or anything else to cancel:");
+    resetPending = true;
     return;
   }
 
