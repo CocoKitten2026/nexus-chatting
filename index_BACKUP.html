@@ -423,7 +423,7 @@
   <!-- DM Chat Window -->
   <div id="dm-chat">
     <div class="dm-chat-header">
-      <button class="back-btn" onclick="closeDMChat()">←</button>
+     <button class="back-btn" style="touch-action:manipulation;" ontouchend="document.getElementById('dm-chat').classList.remove('open')" onclick="document.getElementById('dm-chat').classList.remove('open')">←</button>
       <span id="dm-chat-av" style="font-size:24px;">👤</span>
       <span class="dm-chat-name" id="dm-chat-name">User</span>
       <button class="dm-vc-btn" onclick="sendDMVoiceInvite()">📞 Call</button>
@@ -2634,7 +2634,7 @@ const chatbotToggler = document.querySelector("#chatbot-toggler");
 const closeChatbot = document.querySelector("#close-chatbot");
 
 // API setup — key is set by the user in ⚙️ Settings → Chatbot API Key
-const GEMINI_API_KEY = "paste-your-gemini-api-key-here"; // 👈 paste your Gemini API key here
+const GEMINI_API_KEY = "replace_this_with_your_api_key"; // 👈 paste your Gemini API key here
 const API_KEY = () => GEMINI_API_KEY;
 const API_URL = () => `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY()}`;
 

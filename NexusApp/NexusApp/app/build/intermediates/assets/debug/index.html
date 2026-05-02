@@ -423,7 +423,7 @@
   <!-- DM Chat Window -->
   <div id="dm-chat">
     <div class="dm-chat-header">
-      <button class="back-btn" onclick="closeDMChat()">←</button>
+     <button class="back-btn" style="touch-action:manipulation;" ontouchend="document.getElementById('dm-chat').classList.remove('open')" onclick="document.getElementById('dm-chat').classList.remove('open')">←</button>
       <span id="dm-chat-av" style="font-size:24px;">👤</span>
       <span class="dm-chat-name" id="dm-chat-name">User</span>
       <button class="dm-vc-btn" onclick="sendDMVoiceInvite()">📞 Call</button>
@@ -716,6 +716,12 @@
       </div>
     </div>
     <div class="settings-sec">
+      <h3>📧 Gmail Sync</h3>
+      <input id="gmail-sync-input" class="modal-input" type="email" placeholder="yourname@liks.co" autocomplete="off" />
+      <button class="btn-solid" style="margin-top:8px;width:100%;" onclick="syncGmail()">Sync with Gmail</button>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:6px;">Lets others reach you with <strong>#gmail @you message</strong></p>
+    </div>
+    <div class="settings-sec">
       <h3>Connection</h3>
       <div class="conn-badge">
         <span class="conn-dot offline" id="s-conn-dot"></span>
@@ -962,6 +968,7 @@ function resetBtns(){
 function handleMsg(d){
   switch(d.type){
     case "auth-ok":         onAuthOk(d);          break;
+    case "notify":          notify(d.msg, d.kind || "info", 4000); break;
     case "auth-fail":       onAuthFail(d.reason);  break;
     case "banned":          showBanScreen(d);      break;
     case "player-list":     syncPlayers(d.players);break;
@@ -1617,6 +1624,22 @@ async function sendMessage(){
   const content=ta.value.trim();
   if((!content && !nexusAttachFile) || isViewingVoice) return;
 
+  // ── #gmail @username message ──────────────────────────────────────────────
+  if (content.startsWith("#gmail ")) {
+    const rest = content.slice(7).trim();
+    const parts = rest.split(" ");
+    const toRaw = parts[0].replace("@", "");
+    const message = parts.slice(1).join(" ").trim();
+    if (!toRaw || !message) {
+      notify("Usage: #gmail @username your message", "error", 3000);
+      ta.value = ""; autoResize(ta);
+      return;
+    }
+    emit({ type: "gmail-message", to: toRaw.toLowerCase(), message });
+    ta.value = ""; autoResize(ta);
+    return;
+  }
+
   // ── E2E private message: starts with #username (matched against online players) ─
   let e2eTarget = null;
   let plaintext = null;
@@ -1820,6 +1843,12 @@ function handleKicked(reason){shouldReconnect=false;clearTimeout(reconnectTimer)
 /* ══ Settings ════════════════════════════════════════════════════════════════ */
 function openSettings(){document.getElementById("modal-settings").hidden=false;}
 function closeSettings(){document.getElementById("modal-settings").hidden=true;}
+function syncGmail(){
+  const email=document.getElementById("gmail-sync-input").value.trim().toLowerCase();
+  if(!email){notify("Enter your @liks.co email first.","error",3000);return;}
+  if(!email.endsWith("@liks.co")){notify("Only @liks.co emails are allowed.","error",3000);return;}
+  emit({type:"sync-gmail",email});
+}
 function setTheme(name){document.body.className=name?`theme-${name}`:"";document.querySelectorAll(".theme-dot").forEach(d=>d.classList.remove("active"));const titles={"":"Dark","light":"Light","amoled":"AMOLED","green":"Green"};document.querySelector(`.theme-dot[title="${titles[name]||"Dark"}"]`)?.classList.add("active");localStorage.setItem("nexus-theme",name);}
 const savedTheme=localStorage.getItem("nexus-theme");if(savedTheme!==null)setTheme(savedTheme);
 
@@ -2634,7 +2663,7 @@ const chatbotToggler = document.querySelector("#chatbot-toggler");
 const closeChatbot = document.querySelector("#close-chatbot");
 
 // API setup — key is set by the user in ⚙️ Settings → Chatbot API Key
-const GEMINI_API_KEY = "AIzaSyCXuqqdRndi56kjlCSOzRl9m-uWn6vUdmk"; // 👈 paste your Gemini API key here
+const GEMINI_API_KEY = "AIzaSyDTMa-qbn7Gnil7hWkBP_bvlZptykeq9Dg"; // 👈 paste your Gemini API key here
 const API_KEY = () => GEMINI_API_KEY;
 const API_URL = () => `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY()}`;
 

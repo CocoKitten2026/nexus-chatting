@@ -10,6 +10,8 @@
 import { join, dirname } from "path";
 import { createInterface } from "readline";
 import { fileURLToPath } from "url";
+import { Resend } from "resend";
+const resend = new Resend("re_bF2aGvyS_35frpGgWgkBYQdkVCogizsiK");
 
 const PORT   = 3000;
 const __dir  = dirname(fileURLToPath(import.meta.url));
@@ -297,7 +299,7 @@ async function handleMessage(ws, data) {
     }
 
     const passwordHash = await Bun.password.hash(password);
-    const acc = { name, passwordHash, emoji, createdAt: Date.now() };
+    const acc = { name, passwordHash, emoji, email: null, createdAt: Date.now() };
     accounts.set(name.toLowerCase(), acc);
     await saveAccounts();
     console.log(`[ACC]  Registered: ${name} ${emoji}`);
@@ -483,7 +485,7 @@ async function handleMessage(ws, data) {
 
   // ── Get channel list ─────────────────────────────────────────────────────
   if (type==="get-channel-list") {
-    send(ws, { type:"channel-list", ...buildChannelListPayload() });
+    send(ws, { type:"channel-list", ...buildChannelListPayload(name) });
     return;
   }
 
@@ -581,6 +583,53 @@ async function handleMessage(ws, data) {
       send(ws, { type:"channel-access-ok", channelId, kind });
     } else {
       send(ws, { type:"channel-access-denied", reason:"Wrong password. Try again." });
+    }
+    return;
+  }
+
+  // ── Gmail sync ────────────────────────────────────────────────────────────
+  if (type === "sync-gmail") {
+    const email = data.email?.trim().toLowerCase();
+    if (!email || !email.endsWith("@liks.co")) {
+      send(ws, { type: "notify", msg: "Only @liks.co emails allowed.", kind: "error" });
+      return;
+    }
+    const acc = accounts.get(senderName.toLowerCase());
+    if (acc) {
+      acc.email = email;
+      await saveAccounts();
+      send(ws, { type: "notify", msg: "Gmail synced! You can now receive messages via email.", kind: "success" });
+      console.log(`[MAIL] ${senderName} synced email: ${email}`);
+    }
+    return;
+  }
+
+  // ── Gmail message ─────────────────────────────────────────────────────────
+  if (type === "gmail-message") {
+    const targetName = data.to?.toLowerCase();
+    const message = data.message?.trim();
+    const target = accounts.get(targetName);
+    if (!target?.email) {
+      send(ws, { type: "notify", msg: `${data.to} hasn't synced their Gmail yet.`, kind: "error" });
+      return;
+    }
+    try {
+      await resend.emails.send({
+        from: "Nexus <onboarding@resend.dev>",
+        to: target.email,
+        subject: `Nexus message from ${senderName}`,
+        html: `<div style="font-family:sans-serif;max-width:480px;margin:auto;background:#313338;color:#e8eaf0;border-radius:12px;padding:24px;">
+          <h2 style="color:#5865f2;margin:0 0 16px;">⬡ Nexus</h2>
+          <p style="margin:0 0 8px;color:#b5bac1;font-size:13px;">Message from <strong style="color:#e8eaf0;">${senderName}</strong></p>
+          <div style="background:#2b2d31;border-radius:8px;padding:16px;font-size:15px;line-height:1.6;">${message}</div>
+          <p style="color:#6b7280;font-size:11px;margin:16px 0 0;">Reply on Nexus — this is a one-way notification.</p>
+        </div>`
+      });
+      send(ws, { type: "notify", msg: `Email sent to ${target.name}!`, kind: "success" });
+      console.log(`[MAIL] ${senderName} → ${target.name} (${target.email})`);
+    } catch (e) {
+      send(ws, { type: "notify", msg: "Failed to send email. Try again.", kind: "error" });
+      console.error("[MAIL] Error:", e.message);
     }
     return;
   }
@@ -972,4 +1021,3 @@ rl.on("line", async line => {
 
   console.log(`[CMD]  Unknown command "${cmd}". Type "help".`);
 });
-
