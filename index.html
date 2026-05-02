@@ -423,7 +423,7 @@
   <!-- DM Chat Window -->
   <div id="dm-chat">
     <div class="dm-chat-header">
-     <button class="back-btn" onclick="document.getElementById('dm-chat').classList.remove('open')">←</button>
+     <button class="back-btn" style="touch-action:manipulation;" ontouchend="document.getElementById('dm-chat').classList.remove('open')" onclick="document.getElementById('dm-chat').classList.remove('open')">←</button>
       <span id="dm-chat-av" style="font-size:24px;">👤</span>
       <span class="dm-chat-name" id="dm-chat-name">User</span>
       <button class="dm-vc-btn" onclick="sendDMVoiceInvite()">📞 Call</button>
