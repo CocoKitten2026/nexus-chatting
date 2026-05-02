@@ -16,5 +16,11 @@
     "passwordHash": "$argon2id$v=19$m=65536,t=2,p=1$a2QgVPHu4si6JLpuzRFb10xFDSsydz95gcgLBgquulo$KsmUJLJAZgxbUOGTNIO63Wjfz/Tre8Mj/ADzyLloUg4",
     "emoji": "🐱",
     "createdAt": 1777701883049
+  },
+  {
+    "name": "Prueba2",
+    "passwordHash": "$argon2id$v=19$m=65536,t=2,p=1$Hlq4MHRGueO/O+6JhcJII3cIPJ37lNCqDJ9IkrauMCw$/Xas2sitqMrbh993srtMgJmT81mMTw4zNCunCG4hgkQ",
+    "emoji": "🐱",
+    "createdAt": 1777702730178
   }
 ]

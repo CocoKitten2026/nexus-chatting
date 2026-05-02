@@ -290,6 +290,7 @@
         z-index: 799;
         backdrop-filter: blur(1px);
       }
+      #mobile-back-btn { display: block !important; }
       #sidebar-overlay.visible {
         display: block;
       }
@@ -531,6 +532,7 @@
 
     <main id="main-panel">
       <div id="channel-header">
+        <button class="hdr-btn" id="mobile-back-btn" onclick="openMobileSidebar()" title="Menu" style="display:none;font-size:20px;padding:4px 8px;margin-right:4px;">←</button>
         <span class="hdr-icon" id="hdr-icon">#</span>
         <span class="hdr-name" id="hdr-name">general</span>
         <div class="hdr-divider"></div>
