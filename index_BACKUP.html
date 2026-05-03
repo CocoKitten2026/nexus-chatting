@@ -1072,7 +1072,7 @@ function buildSidebar(){
   // ── Text channels ──────────────────────────────
   const tl=document.getElementById("text-channel-list");
   tl.innerHTML="";
-  const allText=[...TEXT_CHANNELS,...customTextChannels];
+  const allText=[...TEXT_CHANNELS,...customTextChannels.filter(ch=>!isDMChannel(ch.id)||(ch.dmUsers&&ch.dmUsers.includes(myName)))];
   allText.forEach(ch=>{
     const unread=unreadCounts.get(ch.id)||0;
     const locked=ch.hasPassword&&!unlockedChannels.has(ch.id);
@@ -1083,14 +1083,14 @@ function buildSidebar(){
       <span class="ch-name">${esc(ch.name)}</span>
       ${unread>0?`<span class="ch-unread">${unread>99?"99+":unread}</span>`:""}
     `;
-    el.onclick=()=>tryOpenTextChannel(ch.id);
+    el.onclick=()=>{isViewingVoice=false;tryOpenTextChannel(ch.id);};
     tl.appendChild(el);
   });
 
   // ── Voice channels ─────────────────────────────
   const vl=document.getElementById("voice-channel-list");
   vl.innerHTML="";
-  const allVoice=[...VOICE_CHANNELS,...customVoiceChannels];
+  const allVoice=[...VOICE_CHANNELS,...customVoiceChannels.filter(ch=>!isDMChannel(ch.id)||(ch.dmUsers&&ch.dmUsers.includes(myName)))];
   allVoice.forEach(vc=>{
     const isJoined=joinedVoiceChannel===vc.id;
     const isViewing=isViewingVoice&&viewingVC===vc.id;
@@ -1220,7 +1220,7 @@ async function joinVoiceChannel(vcId){
   document.getElementById("vsb-avatar").textContent=myEmoji;
   document.getElementById("vsb-name").textContent=myName;
   setMuted(true);
-  postSystemMsg("general",`🔊 **${myName}** joined voice channel **${vc?.name||vcId}**`);
+
   notify(`Joined ${vc?.name||vcId} — hold M to speak`,"success");
   if(audioCtx?.state==="suspended") audioCtx.resume();
   startSilentAudio();
@@ -1241,7 +1241,7 @@ function leaveVoiceChannel(switchToText=true){
   document.getElementById("vc-status-bar").hidden=true;
   hideCallOverlay();
   updateMediaSession();
-  if(vc){postSystemMsg("general",`👋 **${myName}** left voice channel **${vc.name}**`);notify(`Left ${vc.name}`,"info");}
+  if(vc){notify(`Left ${vc.name}`,"info");}
   if(switchToText)switchTextChannel(activeTextChannel);
   else{buildSidebar();renderMembers();}
 }
@@ -1804,7 +1804,7 @@ async function onChatMessage(d){
   // Normal unencrypted message
   appendMessage(d.channel,{from:d.from,emoji:d.emoji,content:d.content,timestamp:d.timestamp||Date.now(),attachment:d.attachment||null});
 }
-function onChatHistory(channels){for(const[ch,msgs]of Object.entries(channels)){if(chatMessages.has(ch))chatMessages.set(ch,msgs);}renderMessages(activeTextChannel);}
+function onChatHistory(channels){for(const[ch,msgs]of Object.entries(channels)){if(chatMessages.has(ch))chatMessages.set(ch,msgs.filter(m=>!m.e2e||(m.from===myName||m.recipient===myName)));}renderMessages(activeTextChannel);}
 
 /* ══ Typing ══════════════════════════════════════════════════════════════════ */
 function onTyping(from,channel){if(from===myName)return;if(typingMap.has(from))clearTimeout(typingMap.get(from).timer);const timer=setTimeout(()=>{typingMap.delete(from);updateTypingBar();},4000);typingMap.set(from,{channel,timer});updateTypingBar();}
@@ -2003,7 +2003,6 @@ function sendDMMessage(){
   inp.value='';
   const chId=dmChannelId(myName,activeDMUser);
   if(!chatMessages.has(chId))chatMessages.set(chId,[]);
-  chatMessages.get(chId).push({from:myName,content:text,ts:Date.now()});
   emit({type:"chat-message",channel:chId,content:text});
   renderDMChatMessages();
 }
