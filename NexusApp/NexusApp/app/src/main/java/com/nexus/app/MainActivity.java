@@ -49,7 +49,8 @@ public class MainActivity extends Activity {
             requestPermissions(
                     new String[]{
                             Manifest.permission.RECORD_AUDIO,
-                            Manifest.permission.MODIFY_AUDIO_SETTINGS
+                            Manifest.permission.MODIFY_AUDIO_SETTINGS,
+                            Manifest.permission.CAMERA
                     },
                     MIC_PERMISSION_REQUEST
             );

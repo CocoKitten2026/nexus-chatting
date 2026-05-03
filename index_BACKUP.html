@@ -586,12 +586,12 @@
       <div class="server-header"><span>Nexus</span><span>⌄</span></div>
       <div id="channels-scroll">
         <div class="category-header">
-          <span>Text Channels</span>
+          <span id="label-text-channels">Text Channels</span>
           <span class="cat-add" onclick="openCreateChannel('text')" title="Create text channel">＋</span>
         </div>
         <div id="text-channel-list"></div>
         <div class="category-header">
-          <span>Voice Channels</span>
+          <span id="label-voice-channels">Voice Channels</span>
           <span class="cat-add" onclick="openCreateChannel('voice')" title="Create voice channel">＋</span>
         </div>
         <div id="voice-channel-list"></div>
@@ -692,14 +692,14 @@
 <!-- SETTINGS MODAL -->
 <div class="modal-bg" id="modal-settings" hidden onclick="if(event.target===this)closeSettings()">
   <div class="modal-card">
-    <h2>⚙️ Settings</h2>
+    <h2 id="label-settings">⚙️ Settings</h2>
     <div class="settings-sec">
-      <h3>Microphone</h3>
+      <h3 id="label-microphone">Microphone</h3>
       <select id="mic-select"><option>Loading…</option></select>
       <canvas id="waveform" width="400" height="36"></canvas>
     </div>
     <div class="settings-sec">
-      <h3>Master Volume</h3>
+      <h3 id="label-volume">Master Volume</h3>
       <div class="vol-row">
         <label>🔊</label>
         <input type="range" id="master-vol" min="0" max="200" value="100" />
@@ -707,7 +707,7 @@
       </div>
     </div>
     <div class="settings-sec">
-      <h3>Theme</h3>
+      <h3 id="label-theme">Theme</h3>
       <div class="theme-picker">
         <div class="theme-dot active" title="Dark"  style="background:#313338;"                onclick="setTheme('')"></div>
         <div class="theme-dot"        title="Light" style="background:#f2f3f5;border-color:#ccc;" onclick="setTheme('light')"></div>
@@ -716,15 +716,24 @@
       </div>
     </div>
     <div class="settings-sec">
-      <h3>Connection</h3>
+      <h3 id="label-language">Language</h3>
+      <select id="lang-select" onchange="setLanguage(this.value)">
+        <option value="es">🇪🇸 Español</option>
+        <option value="en">🇬🇧 English</option>
+        <option value="fr">🇫🇷 Français</option>
+        <option value="de">🇩🇪 Deutsch</option>
+      </select>
+    </div>
+    <div class="settings-sec">
+      <h3 id="label-connection">Connection</h3>
       <div class="conn-badge">
         <span class="conn-dot offline" id="s-conn-dot"></span>
         <span id="s-conn-label">Offline</span>
       </div>
     </div>
     <div class="modal-btns">
-      <button class="btn-ghost" onclick="closeSettings()">Close</button>
-      <button class="btn-solid" style="background:var(--danger);" onclick="signOut()">Sign Out</button>
+      <button class="btn-ghost" id="label-close-btn" onclick="closeSettings()">Close</button>
+      <button class="btn-solid" id="label-signout-btn" style="background:var(--danger);" onclick="signOut()">Sign Out</button>
     </div>
   </div>
 </div>
@@ -784,6 +793,7 @@ const TEXT_CHANNELS = [
   { id:"off-topic", name:"off-topic", topic:"Random stuff, memes, and fun" },
   { id:"help",      name:"help",      topic:"Ask for help with anything"    },
   { id:"media",     name:"media",     topic:"Share music, videos, and links"},
+  { id:"chatbot",   name:"chatbot",   topic:"AI Assistant" },
 ];
 const VOICE_CHANNELS = [
   { id:"vc-general", name:"General" },
@@ -1146,6 +1156,19 @@ function tryOpenVoiceChannel(id){
 
 /* ══ Text channel switch ═════════════════════════════════════════════════════ */
 function switchTextChannel(id){
+  if(id==="chatbot"){
+    document.body.classList.add("show-chatbot");
+    activeTextChannel="chatbot"; isViewingVoice=false;
+    document.getElementById("hdr-name").textContent="chatbot";
+    document.getElementById("hdr-icon").textContent="🤖";
+    document.getElementById("hdr-topic").textContent="AI Assistant";
+    document.getElementById("chat-view").hidden=true;
+    renderChannelList(); return;
+  }
+  document.body.classList.remove("show-chatbot");
+  document.getElementById("chat-view").hidden=false;
+  document.getElementById("hdr-icon").textContent="#";
+
   activeTextChannel=id;isViewingVoice=false;viewingVC=null;
   unreadCounts.set(id,0);
   const ch=getAllTextChannels().find(c=>c.id===id);
@@ -1820,6 +1843,46 @@ function handleKicked(reason){shouldReconnect=false;clearTimeout(reconnectTimer)
 /* ══ Settings ════════════════════════════════════════════════════════════════ */
 function openSettings(){document.getElementById("modal-settings").hidden=false;}
 function closeSettings(){document.getElementById("modal-settings").hidden=true;}
+
+// ── Language system ────────────────────────────────────────────────────────
+const CHANNEL_TRANSLATIONS={
+  es:{general:{name:"general",topic:"Chat general — todo vale"},"off-topic":{name:"off-topic",topic:"Cosas random, memes y diversión"},help:{name:"ayuda",topic:"Pregunta lo que necesites"},media:{name:"media",topic:"Comparte música, videos y links"},chatbot:{name:"chatbot",topic:"Asistente IA"}},
+  en:{general:{name:"general",topic:"General chat — anything goes"},"off-topic":{name:"off-topic",topic:"Random stuff, memes, and fun"},help:{name:"help",topic:"Ask for help with anything"},media:{name:"media",topic:"Share music, videos, and links"},chatbot:{name:"chatbot",topic:"AI Assistant"}},
+  fr:{general:{name:"général",topic:"Chat général — tout est permis"},"off-topic":{name:"hors-sujet",topic:"Trucs random, mèmes et fun"},help:{name:"aide",topic:"Demandez de l'aide pour tout"},media:{name:"médias",topic:"Partagez musique, vidéos et liens"},chatbot:{name:"chatbot",topic:"Assistant IA"}},
+  de:{general:{name:"allgemein",topic:"Allgemeiner Chat — alles erlaubt"},"off-topic":{name:"off-topic",topic:"Random, Memes und Spaß"},help:{name:"hilfe",topic:"Frag um Hilfe bei allem"},media:{name:"medien",topic:"Musik, Videos und Links teilen"},chatbot:{name:"chatbot",topic:"KI-Assistent"}},
+};
+const LANGS={
+  es:{textChannels:"Canales de Texto",voiceChannels:"Canales de Voz",settings:"⚙️ Ajustes",microphone:"Micrófono",volume:"Volumen Principal",theme:"Tema",language:"Idioma",connection:"Conexión",connected:"Conectado",offline:"Desconectado",close:"Cerrar",signOut:"Cerrar Sesión",placeholder:"Mensaje",online:"EN LÍNEA"},
+  en:{textChannels:"Text Channels",voiceChannels:"Voice Channels",settings:"⚙️ Settings",microphone:"Microphone",volume:"Master Volume",theme:"Theme",language:"Language",connection:"Connection",connected:"Connected",offline:"Offline",close:"Close",signOut:"Sign Out",placeholder:"Message",online:"ONLINE"},
+  fr:{textChannels:"Salons Texte",voiceChannels:"Salons Vocaux",settings:"⚙️ Paramètres",microphone:"Microphone",volume:"Volume Principal",theme:"Thème",language:"Langue",connection:"Connexion",connected:"Connecté",offline:"Hors ligne",close:"Fermer",signOut:"Déconnexion",placeholder:"Message",online:"EN LIGNE"},
+  de:{textChannels:"Textkanäle",voiceChannels:"Sprachkanäle",settings:"⚙️ Einstellungen",microphone:"Mikrofon",volume:"Lautstärke",theme:"Design",language:"Sprache",connection:"Verbindung",connected:"Verbunden",offline:"Offline",close:"Schließen",signOut:"Abmelden",placeholder:"Nachricht",online:"ONLINE"},
+};
+function setLanguage(lang){
+  const L=LANGS[lang]||LANGS.es;
+  localStorage.setItem("nexus-lang",lang);
+  const s=id=>document.getElementById(id);
+  if(s("label-text-channels"))s("label-text-channels").textContent=L.textChannels;
+  if(s("label-voice-channels"))s("label-voice-channels").textContent=L.voiceChannels;
+  if(s("label-settings"))s("label-settings").textContent=L.settings;
+  if(s("label-microphone"))s("label-microphone").textContent=L.microphone;
+  if(s("label-volume"))s("label-volume").textContent=L.volume;
+  if(s("label-theme"))s("label-theme").textContent=L.theme;
+  if(s("label-language"))s("label-language").textContent=L.language;
+  if(s("label-connection"))s("label-connection").textContent=L.connection;
+  if(s("label-close-btn"))s("label-close-btn").textContent=L.close;
+  if(s("label-signout-btn"))s("label-signout-btn").textContent=L.signOut;
+  if(s("lang-select"))s("lang-select").value=lang;
+  const mi=s("message-input");
+  if(mi)mi.placeholder=`${L.placeholder} #general  •  🔒 #username msg`;
+  const ct=CHANNEL_TRANSLATIONS[lang]||CHANNEL_TRANSLATIONS.es;
+  for(const ch of TEXT_CHANNELS){if(ct[ch.id]){ch.name=ct[ch.id].name;ch.topic=ct[ch.id].topic;}}
+  if(typeof renderChannelList==="function")renderChannelList();
+  if(activeTextChannel&&ct[activeTextChannel]){
+    if(s("hdr-name"))s("hdr-name").textContent=ct[activeTextChannel].name;
+    if(s("hdr-topic"))s("hdr-topic").textContent=ct[activeTextChannel].topic;
+  }
+}
+(function(){const saved=localStorage.getItem("nexus-lang")||"es";document.addEventListener("DOMContentLoaded",()=>setLanguage(saved));})();
 function setTheme(name){document.body.className=name?`theme-${name}`:"";document.querySelectorAll(".theme-dot").forEach(d=>d.classList.remove("active"));const titles={"":"Dark","light":"Light","amoled":"AMOLED","green":"Green"};document.querySelector(`.theme-dot[title="${titles[name]||"Dark"}"]`)?.classList.add("active");localStorage.setItem("nexus-theme",name);}
 const savedTheme=localStorage.getItem("nexus-theme");if(savedTheme!==null)setTheme(savedTheme);
 
@@ -2570,11 +2633,6 @@ body.show-emoji-picker .chat-form em-emoji-picker {
 </style>
 
 <!-- Chatbot HTML (verbatim from index.html) -->
-<button id="chatbot-toggler">
-  <span>💬</span>
-  <span>✕</span>
-</button>
-
 <div class="chatbot-popup">
   <!-- Chatbot Header -->
   <div class="chat-header">
