@@ -23,13 +23,15 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends Activity {
 
     private WebView webView;
     private ValueCallback<Uri[]> filePathCallback;
     private static final int FILE_CHOOSER_REQUEST = 100;
-    private static final int MIC_PERMISSION_REQUEST = 200;
+    private static final int PERM_REQUEST = 200;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -45,16 +47,16 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         webView = findViewById(R.id.webview);
 
-        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(
-                    new String[]{
-                            Manifest.permission.RECORD_AUDIO,
-                            Manifest.permission.MODIFY_AUDIO_SETTINGS,
-                            Manifest.permission.CAMERA
-                    },
-                    MIC_PERMISSION_REQUEST
-            );
-        }
+        // Request all needed permissions at once
+        List<String> permsNeeded = new ArrayList<>();
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
+            permsNeeded.add(Manifest.permission.RECORD_AUDIO);
+        if (checkSelfPermission(Manifest.permission.MODIFY_AUDIO_SETTINGS) != PackageManager.PERMISSION_GRANTED)
+            permsNeeded.add(Manifest.permission.MODIFY_AUDIO_SETTINGS);
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
+            permsNeeded.add(Manifest.permission.CAMERA);
+        if (!permsNeeded.isEmpty())
+            requestPermissions(permsNeeded.toArray(new String[0]), PERM_REQUEST);
 
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
@@ -164,11 +166,15 @@ public class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == MIC_PERMISSION_REQUEST) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == PERM_REQUEST) {
+            boolean allGranted = true;
+            for (int r : grantResults) {
+                if (r != PackageManager.PERMISSION_GRANTED) { allGranted = false; break; }
+            }
+            if (allGranted) {
                 webView.reload();
             } else {
-                Toast.makeText(this, "Microphone permission is needed for voice channels", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Microphone and camera permissions are needed for voice/video", Toast.LENGTH_LONG).show();
             }
         }
     }
