@@ -716,12 +716,6 @@
       </div>
     </div>
     <div class="settings-sec">
-      <h3>📧 Gmail Sync</h3>
-      <input id="gmail-sync-input" class="modal-input" type="email" placeholder="yourname@liks.co" autocomplete="off" />
-      <button class="btn-solid" style="margin-top:8px;width:100%;" onclick="syncGmail()">Sync with Gmail</button>
-      <p style="font-size:12px;color:var(--text-muted);margin-top:6px;">Lets others reach you with <strong>#gmail @you message</strong></p>
-    </div>
-    <div class="settings-sec">
       <h3>Connection</h3>
       <div class="conn-badge">
         <span class="conn-dot offline" id="s-conn-dot"></span>
@@ -968,7 +962,6 @@ function resetBtns(){
 function handleMsg(d){
   switch(d.type){
     case "auth-ok":         onAuthOk(d);          break;
-    case "notify":          notify(d.msg, d.kind || "info", 4000); break;
     case "auth-fail":       onAuthFail(d.reason);  break;
     case "banned":          showBanScreen(d);      break;
     case "player-list":     syncPlayers(d.players);break;
@@ -1227,7 +1220,7 @@ async function joinVoiceChannel(vcId){
   document.getElementById("vsb-avatar").textContent=myEmoji;
   document.getElementById("vsb-name").textContent=myName;
   setMuted(true);
-  postSystemMsg("general",`🔊 **${myName}** joined voice channel **${vc?.name||vcId}**`);
+
   notify(`Joined ${vc?.name||vcId} — hold M to speak`,"success");
   if(audioCtx?.state==="suspended") audioCtx.resume();
   startSilentAudio();
@@ -1248,7 +1241,7 @@ function leaveVoiceChannel(switchToText=true){
   document.getElementById("vc-status-bar").hidden=true;
   hideCallOverlay();
   updateMediaSession();
-  if(vc){postSystemMsg("general",`👋 **${myName}** left voice channel **${vc.name}**`);notify(`Left ${vc.name}`,"info");}
+  if(vc){notify(`Left ${vc.name}`,"info");}
   if(switchToText)switchTextChannel(activeTextChannel);
   else{buildSidebar();renderMembers();}
 }
@@ -1624,22 +1617,6 @@ async function sendMessage(){
   const content=ta.value.trim();
   if((!content && !nexusAttachFile) || isViewingVoice) return;
 
-  // ── #gmail @username message ──────────────────────────────────────────────
-  if (content.startsWith("#gmail ")) {
-    const rest = content.slice(7).trim();
-    const parts = rest.split(" ");
-    const toRaw = parts[0].replace("@", "");
-    const message = parts.slice(1).join(" ").trim();
-    if (!toRaw || !message) {
-      notify("Usage: #gmail @username your message", "error", 3000);
-      ta.value = ""; autoResize(ta);
-      return;
-    }
-    emit({ type: "gmail-message", to: toRaw.toLowerCase(), message });
-    ta.value = ""; autoResize(ta);
-    return;
-  }
-
   // ── E2E private message: starts with #username (matched against online players) ─
   let e2eTarget = null;
   let plaintext = null;
@@ -1827,7 +1804,7 @@ async function onChatMessage(d){
   // Normal unencrypted message
   appendMessage(d.channel,{from:d.from,emoji:d.emoji,content:d.content,timestamp:d.timestamp||Date.now(),attachment:d.attachment||null});
 }
-function onChatHistory(channels){for(const[ch,msgs]of Object.entries(channels)){if(chatMessages.has(ch))chatMessages.set(ch,msgs);}renderMessages(activeTextChannel);}
+function onChatHistory(channels){for(const[ch,msgs]of Object.entries(channels)){if(chatMessages.has(ch))chatMessages.set(ch,msgs.filter(m=>!m.e2e||(m.from===myName||m.recipient===myName)));}renderMessages(activeTextChannel);}
 
 /* ══ Typing ══════════════════════════════════════════════════════════════════ */
 function onTyping(from,channel){if(from===myName)return;if(typingMap.has(from))clearTimeout(typingMap.get(from).timer);const timer=setTimeout(()=>{typingMap.delete(from);updateTypingBar();},4000);typingMap.set(from,{channel,timer});updateTypingBar();}
@@ -1843,12 +1820,6 @@ function handleKicked(reason){shouldReconnect=false;clearTimeout(reconnectTimer)
 /* ══ Settings ════════════════════════════════════════════════════════════════ */
 function openSettings(){document.getElementById("modal-settings").hidden=false;}
 function closeSettings(){document.getElementById("modal-settings").hidden=true;}
-function syncGmail(){
-  const email=document.getElementById("gmail-sync-input").value.trim().toLowerCase();
-  if(!email){notify("Enter your @liks.co email first.","error",3000);return;}
-  if(!email.endsWith("@liks.co")){notify("Only @liks.co emails are allowed.","error",3000);return;}
-  emit({type:"sync-gmail",email});
-}
 function setTheme(name){document.body.className=name?`theme-${name}`:"";document.querySelectorAll(".theme-dot").forEach(d=>d.classList.remove("active"));const titles={"":"Dark","light":"Light","amoled":"AMOLED","green":"Green"};document.querySelector(`.theme-dot[title="${titles[name]||"Dark"}"]`)?.classList.add("active");localStorage.setItem("nexus-theme",name);}
 const savedTheme=localStorage.getItem("nexus-theme");if(savedTheme!==null)setTheme(savedTheme);
 
